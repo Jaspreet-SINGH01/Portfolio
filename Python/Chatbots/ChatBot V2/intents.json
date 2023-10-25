@@ -1,0 +1,11 @@
+{"intents": [
+    {"tag" : "greetings",
+    "patterns" : ["Bonjour", "Salut", "Comment allez-vous ?"],
+    "responses": ["Bonjour !", "Que puis-je faire pour vous ?", "Je vais bien merci ! Et vous ? Comment allez-vous ?"]
+    },
+
+    {"tag" : "Nom",
+    "patterns" : ["Comment t'appelles-tu ? ", "Quel est ton nom ? ", "Qui es-tu ?"],
+    "responses": ["Je m'appelle ChatBot"]
+    }
+]}
