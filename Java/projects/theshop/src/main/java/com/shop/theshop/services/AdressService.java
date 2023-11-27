@@ -1,6 +1,7 @@
 package com.shop.theshop.services;
 
 import com.shop.theshop.entities.Adress;
+import com.shop.theshop.repositories.AdressRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
