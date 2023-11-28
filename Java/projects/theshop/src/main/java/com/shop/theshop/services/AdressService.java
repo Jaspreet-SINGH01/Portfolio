@@ -4,8 +4,6 @@ import com.shop.theshop.entities.Adress;
 import com.shop.theshop.repositories.AdressRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 public class AdressService {
 
@@ -15,7 +13,7 @@ public class AdressService {
         this.adressRepository = adressRepository;
     }
 
-    public List<Adress> getAllAdresses() {
+    public Adress getAllAdresses() {
         return adressRepository.findAll();
     }
 
@@ -36,7 +34,7 @@ public class AdressService {
         existingAdress.setStreet(adress.getStreet());
         existingAdress.setCity(adress.getCity());
         existingAdress.setState(adress.getState());
-        existingAdress.setZipCode(adress.getZipCode());
+        existingAdress.setZipcode(adress.getZipcode());
 
         return adressRepository.save(existingAdress);
     }

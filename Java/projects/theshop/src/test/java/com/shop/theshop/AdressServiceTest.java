@@ -2,7 +2,7 @@
 package com.shop.theshop;
 
 import com.shop.theshop.entities.Adress;
-import com.shop.theshop.repositories.AdresseRepository;
+import com.shop.theshop.repositories.AdressRepository;
 import com.shop.theshop.services.AdressService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,73 +18,63 @@ import static org.mockito.Mockito.when;
 public class AdressServiceTest {
 
     @Autowired
-    private AdressService adresseService;
+    private AdressService adressService;
 
     @MockBean
-    private AdresseRepository adresseRepository;
+    private AdressRepository adressRepository;
 
     @Test
-    public void shouldGetAdresseById() {
-        // Given
-        long adresseId = 1L;
-        Adress mockAdresse = new Adress("123 Main Street", "City", "12345");
-        when(adresseRepository.findById(adresseId)).thenReturn(Optional.of(mockAdresse));
+    public void shouldGetAdressById() {
+        long adressId = 1L;
+        Adress mockAdress = new Adress("123 Main Street", "City", "12345");
+        when(adressRepository.findById(adressId)).thenReturn(Optional.of(mockAdress));
 
-        // When
-        Adress retrievedAdresse = adresseService.getAdressById(adresseId);
+        Adress retrievedAdress = adressService.getAllAdresses(adressId);
 
-        // Then
-        assertThat(retrievedAdresse).isNotNull();
-        assertThat(retrievedAdresse.getStreet()).isEqualTo("123 Main Street");
-        assertThat(retrievedAdresse.getCity()).isEqualTo("City");
-        assertThat(retrievedAdresse.getZipCode()).isEqualTo("12345");
+        assertThat(retrievedAdress).isNotNull();
+        assertThat(retrievedAdress.getStreet()).isEqualTo("123 Main Street");
+        assertThat(retrievedAdress.getCity()).isEqualTo("City");
+        assertThat(retrievedAdress.getZipcode()).isEqualTo("12345");
     }
 
     @Test
-    public void shouldCreateAdresse() {
-        // Given
-        Adresse newAdresse = new Adresse("456 Oak Avenue", "Town", "67890");
-        when(adresseRepository.save(newAdresse)).thenReturn(newAdresse);
+    public void shouldCreateAdress() {
+        Adress newAdress = new Adress("456 Oak Avenue", "Town", "67890");
+        when(adressRepository.save(newAdress)).thenReturn(newAdress);
 
-        // When
-        Adresse createdAdresse = adresseService.createAdresse(newAdresse);
+        Adress createdAdresse = adressService.createAdress(newAdress);
 
-        // Then
         assertThat(createdAdresse).isNotNull();
         assertThat(createdAdresse.getStreet()).isEqualTo("456 Oak Avenue");
         assertThat(createdAdresse.getCity()).isEqualTo("Town");
-        assertThat(createdAdresse.getZipCode()).isEqualTo("67890");
+        assertThat(createdAdresse.getZipcode()).isEqualTo("67890");
     }
 
     @Test
-    public void shouldUpdateAdresse() {
-        // Given
-        long adresseId = 1L;
-        Adresse existingAdresse = new Adresse("789 Pine Street", "Village", "54321");
-        when(adresseRepository.findById(adresseId)).thenReturn(Optional.of(existingAdresse));
+    public void shouldUpdateAdress() {
+        long adressId = 1L;
+        Adress existingAdress = new Adress("789 Pine Street", "Village", "54321");
+        when(adressRepository.findById(adressId)).thenReturn(Optional.of(existingAdress));
 
-        Adresse updatedAdresse = new Adresse("Updated Street", "Updated City", "98765");
+        Adress updatedAdress = new Adress("Updated Street", "Updated City", "98765");
 
-        // When
-        Adresse updatedAdresseResult = adresseService.updateAdresse(adresseId, updatedAdresse);
+        Adress updatedAdressResult = adressService.updateAdress(adressId, updatedAdress);
 
-        // Then
-        assertThat(updatedAdresseResult).isNotNull();
-        assertThat(updatedAdresseResult.getStreet()).isEqualTo("Updated Street");
-        assertThat(updatedAdresseResult.getCity()).isEqualTo("Updated City");
-        assertThat(updatedAdresseResult.getZipCode()).isEqualTo("98765");
+        assertThat(updatedAdressResult).isNotNull();
+        assertThat(updatedAdressResult.getStreet()).isEqualTo("Updated Street");
+        assertThat(updatedAdressResult.getCity()).isEqualTo("Updated City");
+        assertThat(updatedAdressResult.getZipcode()).isEqualTo("98765");
     }
 
     @Test
-    public void shouldDeleteAdresse() {
+    public void shouldDeleteAdress() {
         // Given
-        long adresseId = 1L;
-        Adresse existingAdresse = new Adresse("123 Main Street", "City", "12345");
-        when(adresseRepository.findById(adresseId)).thenReturn(Optional.of(existingAdresse));
+        long adressId = 1L;
+        Adress existingAdress = new Adress("123 Main Street", "City", "12345");
+        when(adressRepository.findById(adressId)).thenReturn(Optional.of(existingAdress));
 
         // When
-        adresseService.deleteAdresse(adresseId);
+        adressService.deleteAdress(adressId);
 
-        // Then: You might want to verify that the delete method of the repository is called
     }
 }

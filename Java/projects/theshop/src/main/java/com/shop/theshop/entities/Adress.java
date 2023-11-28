@@ -15,6 +15,9 @@ public class Adress {
     private String zipcode;
     private String country;
 
+    public Adress(String updatedStreet, String updatedCity, String s) {
+    }
+
     // Getters
     public Long getId() {
         return id;
