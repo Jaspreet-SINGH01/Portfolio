@@ -16,6 +16,9 @@ public class User {
     private String name;
     @Column(name = "firstname")
     private String firstname;
+    @Column(name = "username")
+    private String username;
+
 
 
     // getters
@@ -39,6 +42,8 @@ public class User {
         return firstname;
     }
 
+    public String getUsername() { return username;}
+
 // setters
     public void setId(Long id) {
         this.id = id;
@@ -58,6 +63,10 @@ public class User {
 
     public void setFirstname(String firstname) {
         this.firstname = firstname;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 }
 

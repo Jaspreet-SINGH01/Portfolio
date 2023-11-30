@@ -1,6 +1,7 @@
 package com.shop.theshop.controller;
 
 import com.shop.theshop.entities.Adress;
+import com.shop.theshop.services.AdressService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +18,7 @@ public class AdressController {
 
     @GetMapping("/adresses")
     public List<Adress> getAllAdresses() {
-        return adressService.getAllAdresses();
+        return (List<Adress>) adressService.getAllAdresses(adressId);
     }
 
     @GetMapping("/adresses/{id}")

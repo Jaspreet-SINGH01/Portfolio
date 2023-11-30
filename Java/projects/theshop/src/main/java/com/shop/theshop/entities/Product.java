@@ -15,7 +15,7 @@ public class Product {
     private String description;
     private Double price;
 
-    public Product(String newProduct, String description, double v) {
+    public Product(/*String newProduct, String description, double v*/) {
     }
 
     // Getters

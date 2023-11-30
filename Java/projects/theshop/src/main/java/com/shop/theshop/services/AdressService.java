@@ -13,8 +13,8 @@ public class AdressService {
         this.adressRepository = adressRepository;
     }
 
-    public Adress getAllAdresses() {
-        return adressRepository.findAll();
+    public Adress getAllAdresses(long adressId) {
+        return (Adress) adressRepository.findAll();
     }
 
     public Adress findById(Long id) {

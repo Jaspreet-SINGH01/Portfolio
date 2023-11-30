@@ -1,14 +1,19 @@
+// Package dans src/main/java
 package com.shop.theshop.services;
 
 import com.shop.theshop.entities.User;
 import com.shop.theshop.repositories.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
 
+    @Autowired
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
@@ -24,5 +29,25 @@ public class UserService {
 
         return user;
     }
-}
 
+    public User updateUser(Long userId, User updatedUser) {
+        Optional<User> userOptional = userRepository.findById(userId);
+
+        if (userOptional.isPresent()) {
+            User existingUser = userOptional.get();
+
+            existingUser.setEmail(updatedUser.getEmail());
+            existingUser.setPassword(updatedUser.getPassword());
+            existingUser.setName(updatedUser.getName());
+            existingUser.setFirstname(updatedUser.getFirstname());
+
+            return userRepository.save(existingUser);
+        } else {
+            return null;
+        }
+    }
+
+    public void deleteUser(Long userId) {
+        userRepository.deleteById(userId);
+    }
+}
