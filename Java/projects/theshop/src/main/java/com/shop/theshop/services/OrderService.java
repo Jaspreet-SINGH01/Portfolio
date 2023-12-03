@@ -28,21 +28,16 @@ public class OrderService {
     }
 
     public Order createOrder(Order order) {
-        // Ajoutez une logique de validation ou de traitement si nécessaire
         return orderRepository.save(order);
     }
 
     public Order updateOrder(Long id, Order updatedOrder) {
-        // Vérifiez si la commande existe avant de la mettre à jour
         Optional<Order> optionalOrder = orderRepository.findById(id);
         if (optionalOrder.isPresent()) {
             Order existingOrder = optionalOrder.get();
-            // Mettez à jour les champs nécessaires
             existingOrder.setTotalAmount(updatedOrder.getTotalAmount());
-            // Ajoutez d'autres mises à jour si nécessaire
             return orderRepository.save(existingOrder);
         } else {
-            // La commande n'existe pas, vous pouvez choisir de lever une exception ou de créer une nouvelle commande
             return null;
         }
     }

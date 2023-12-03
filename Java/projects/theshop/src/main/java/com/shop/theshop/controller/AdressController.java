@@ -11,6 +11,7 @@ import java.util.List;
 public class AdressController {
 
     private final AdressService adressService;
+    private Long adressId;
 
     public AdressController(AdressService adressService) {
         this.adressService = adressService;

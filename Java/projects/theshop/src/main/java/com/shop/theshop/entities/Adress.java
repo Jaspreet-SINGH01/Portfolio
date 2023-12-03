@@ -18,6 +18,10 @@ public class Adress {
     public Adress(String updatedStreet, String updatedCity, String s) {
     }
 
+    public Adress() {
+
+    }
+
     // Getters
     public Long getId() {
         return id;
