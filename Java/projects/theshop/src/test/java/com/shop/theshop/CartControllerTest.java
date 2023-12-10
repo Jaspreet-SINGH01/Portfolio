@@ -34,14 +34,12 @@ public class CartControllerTest {
 
     @Test
     public void shouldGetAllCarts() throws Exception {
-        // Given
         Cart cart1 = new Cart();
         Cart cart2 = new Cart();
         List<Cart> cartList = Arrays.asList(cart1, cart2);
 
         when(cartService.getAllCarts()).thenReturn(cartList);
 
-        // When/Then
         mockMvc.perform(get("/carts"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -50,14 +48,12 @@ public class CartControllerTest {
 
     @Test
     public void shouldGetCartById() throws Exception {
-        // Given
         Long cartId = 1L;
         Cart cart = new Cart();
         cart.setId(cartId);
 
         when(cartService.getCartById(cartId)).thenReturn(cart);
 
-        // When/Then
         mockMvc.perform(get("/carts/{id}", cartId))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -66,22 +62,19 @@ public class CartControllerTest {
 
     @Test
     public void shouldCreateCart() throws Exception {
-        // Given
         Cart cart = new Cart();
         when(cartService.createCart(cart)).thenReturn(cart);
 
-        // When/Then
         mockMvc.perform(post("/carts")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(cart)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").exists()); // You may adjust the JSON path based on your actual response structure
+                .andExpect(jsonPath("$.id").exists());
     }
 
     @Test
     public void shouldUpdateCart() throws Exception {
-        // Given
         Long cartId = 1L;
         Cart existingCart = new Cart();
         existingCart.setId(cartId);
@@ -91,7 +84,6 @@ public class CartControllerTest {
 
         when(cartService.updateCart(eq(cartId), any(Cart.class))).thenReturn(existingCart);
 
-        // When/Then
         mockMvc.perform(put("/carts/{id}", cartId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updatedCart)))
@@ -102,14 +94,11 @@ public class CartControllerTest {
 
     @Test
     public void shouldDeleteCart() throws Exception {
-        // Given
         Long cartId = 1L;
 
-        // When/Then
         mockMvc.perform(delete("/carts/{id}", cartId))
                 .andExpect(status().isOk());
 
-        // Verify that the service method is called
         verify(cartService, times(1)).deleteCart(cartId);
     }
 }

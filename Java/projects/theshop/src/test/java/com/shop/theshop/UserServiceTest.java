@@ -24,15 +24,12 @@ public class UserServiceTest {
 
     @Test
     public void shouldGetUserById() {
-        // Given
         long userId = 1L;
         User mockUser = new User("testuser", "password123", "Test User");
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
 
-        // When
-        User retrievedUser = userService.getId(userId);
+        User retrievedUser = userService.findById(userId);
 
-        // Then
         assertThat(retrievedUser).isNotNull();
         assertThat(retrievedUser.getFirstname()).isEqualTo("testuser");
         assertThat(retrievedUser.getName()).isEqualTo("Test User");
@@ -40,14 +37,11 @@ public class UserServiceTest {
 
     @Test
     public void shouldCreateUser() {
-        // Given
         User newUser = new User("newuser", "newpassword", "New User");
         when(userRepository.save(newUser)).thenReturn(newUser);
 
-        // When
         User createdUser = userService.createUser(newUser);
 
-        // Then
         assertThat(createdUser).isNotNull();
         assertThat(createdUser.getFirstname()).isEqualTo("newuser");
         assertThat(createdUser.getName()).isEqualTo("New User");
@@ -55,17 +49,14 @@ public class UserServiceTest {
 
     @Test
     public void shouldUpdateUser() {
-        // Given
         long userId = 1L;
         User existingUser = new User("existinguser", "oldpassword", "Existing User");
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
 
         User updatedUser = new User("updateduser", "newpassword", "Updated User");
 
-        // When
         User updatedUserResult = userService.updateUser(userId, updatedUser);
 
-        // Then
         assertThat(updatedUserResult).isNotNull();
         assertThat(updatedUserResult.getFirstname()).isEqualTo("updateduser");
         assertThat(updatedUserResult.getName()).isEqualTo("Updated User");
@@ -73,13 +64,10 @@ public class UserServiceTest {
 
     @Test
     public void shouldDeleteUser() {
-        // Given
         long userId = 1L;
         User existingUser = new User("existinguser", "oldpassword", "Existing User");
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
 
-        // When
         userService.deleteUser(userId);
-
     }
 }

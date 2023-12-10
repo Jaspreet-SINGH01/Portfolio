@@ -16,7 +16,6 @@ public class AdressRepositoryTest {
 
     @Test
     public void shouldSaveAndRetrieveAdress() {
-        // Given
         Adress adress = new Adress();
         adress.setStreet("123 Main St");
         adress.setCity("City");
@@ -24,10 +23,8 @@ public class AdressRepositoryTest {
         adress.setZipcode("12345");
         adress.setCountry("Country");
 
-        // When
         adressRepository.save(adress);
 
-        // Then
         Adress retrievedAdress = adressRepository.findById(adress.getId()).orElse(null);
         assertThat(retrievedAdress).isNotNull();
         assertThat(retrievedAdress.getStreet()).isEqualTo("123 Main St");

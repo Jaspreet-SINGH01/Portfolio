@@ -11,16 +11,13 @@ public class ShippingTest {
 
     @Test
     public void shouldCreateShipping() {
-        // Given
         Shipping shipping = new Shipping();
         shipping.setTrackingNumber("ABC123");
         shipping.setShippingStatus("Shipped");
 
-        // When
         String trackingNumber = shipping.getTrackingNumber();
         String shippingStatus = shipping.getShippingStatus();
 
-        // Then
         assertThat(trackingNumber).isEqualTo("ABC123");
         assertThat(shippingStatus).isEqualTo("Shipped");
     }

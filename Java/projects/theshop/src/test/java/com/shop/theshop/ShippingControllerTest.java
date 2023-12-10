@@ -32,14 +32,12 @@ public class ShippingControllerTest {
 
     @Test
     public void shouldGetAllShipping() throws Exception {
-        // Given
         Shipping shipping1 = new Shipping();
         Shipping shipping2 = new Shipping();
         List<Shipping> shippingList = Arrays.asList(shipping1, shipping2);
 
         when(shippingService.getAllShipping()).thenReturn(shippingList);
 
-        // When/Then
         mockMvc.perform(get("/shipping"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -48,14 +46,12 @@ public class ShippingControllerTest {
 
     @Test
     public void shouldGetShippingById() throws Exception {
-        // Given
         Long shippingId = 1L;
         Shipping shipping = new Shipping();
         shipping.setId(shippingId);
 
         when(shippingService.getShippingById(shippingId)).thenReturn(shipping);
 
-        // When/Then
         mockMvc.perform(get("/shipping/{id}", shippingId))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -64,14 +60,12 @@ public class ShippingControllerTest {
 
     @Test
     public void shouldCreateShipping() throws Exception {
-        // Given
         Shipping shipping = new Shipping();
         shipping.setTrackingNumber("ABC123");
         shipping.setShippingStatus("Shipped");
 
         when(shippingService.createShipping(any(Shipping.class))).thenReturn(shipping);
 
-        // When/Then
         mockMvc.perform(post("/shipping")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(shipping)))
@@ -82,7 +76,6 @@ public class ShippingControllerTest {
 
     @Test
     public void shouldUpdateShipping() throws Exception {
-        // Given
         Long shippingId = 1L;
         Shipping existingShipping = new Shipping();
         existingShipping.setId(shippingId);
@@ -93,7 +86,6 @@ public class ShippingControllerTest {
 
         when(shippingService.updateShipping(eq(shippingId), any(Shipping.class))).thenReturn(existingShipping);
 
-        // When/Then
         mockMvc.perform(put("/shipping/{id}", shippingId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updatedShipping)))
@@ -104,11 +96,9 @@ public class ShippingControllerTest {
 
     @Test
     public void shouldDeleteShipping() throws Exception {
-        // Given
         Long shippingId = 1L;
         when(shippingService.deleteShipping(shippingId)).thenReturn(true);
 
-        // When/Then
         mockMvc.perform(delete("/shipping/{id}", shippingId))
                 .andExpect(status().isOk());
     }

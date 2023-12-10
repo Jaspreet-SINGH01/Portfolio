@@ -20,7 +20,6 @@ public class OrderRepositoryTest {
 
     @Test
     public void shouldSaveAndRetrieveOrder() {
-        // Given
         User user = new User();
         user.setEmail("user@example.com");
 
@@ -28,10 +27,8 @@ public class OrderRepositoryTest {
         order.setUser(user);
         order.getStatus(OrderStatus.PENDING);
 
-        // When
         orderRepository.save(order);
 
-        // Then
         Order retrievedOrder = orderRepository.findById(order.getId()).orElse(null);
         assertThat(retrievedOrder).isNotNull();
         assertThat(retrievedOrder.getUser()).isEqualTo(user);
@@ -40,7 +37,6 @@ public class OrderRepositoryTest {
 
     @Test
     public void shouldFindOrdersByUser() {
-        // Given
         User user1 = new User();
         user1.setEmail("user1@example.com");
 
@@ -49,19 +45,17 @@ public class OrderRepositoryTest {
 
         Order order1 = new Order();
         order1.setUser(user1);
-        order1.setOrderStatus(OrderStatus.PENDING);
+        order1.setStatus(OrderStatus.PENDING);
 
         Order order2 = new Order();
         order2.setUser(user2);
-        order2.setOrderStatus(OrderStatus.SHIPPED);
+        order2.setStatus(OrderStatus.SHIPPED);
 
         orderRepository.saveAll(List.of(order1, order2));
 
-        // When
-        List<Order> ordersByUser1 = orderRepository.findByUser(user1);
-        List<Order> ordersByUser2 = orderRepository.findByUser(user2);
+        List<Order> ordersByUser1 = orderRepository.findById(user1);
+        List<Order> ordersByUser2 = orderRepository.findById(user2);
 
-        // Then
         assertThat(ordersByUser1).hasSize(1);
         assertThat(ordersByUser1.get(0).getUser()).isEqualTo(user1);
         assertThat(ordersByUser1.get(0).getStatus()).isEqualTo(OrderStatus.PENDING);

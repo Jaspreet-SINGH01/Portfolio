@@ -23,7 +23,6 @@ public class CartRepositoryTest {
 
     @Test
     public void shouldSaveAndRetrieveCart() {
-        // Given
         User user = new User();
         entityManager.persist(user);
 
@@ -31,12 +30,10 @@ public class CartRepositoryTest {
 
         Cart cart = new Cart(user, totalPrice);
 
-        // When
         cartRepository.save(cart);
         entityManager.flush();
         entityManager.clear();
 
-        // Then
         Cart retrievedCart = cartRepository.findById(cart.getId()).orElse(null);
         assertThat(retrievedCart).isNotNull();
         assertThat(retrievedCart.getUser()).isEqualTo(user);

@@ -9,11 +9,12 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class OrderTest {
 
     @Test
     public void shouldCreateOrder() {
-        // Given
         Long userId = 1L;
         User user = new User();
         user.setId(userId);
@@ -26,13 +27,11 @@ public class OrderTest {
 
         OrderStatus status = OrderStatus.PENDING;
 
-        // When
         Order order = new Order();
         order.setUser(user);
         order.setOrderItems(orderItems);
-        order.setOrderStatus(status);
+        order.setStatus(status);
 
-        // Then
         assertThat(order).isNotNull();
         assertThat(order.getUser()).isEqualTo(user);
         assertThat(order.getOrderItems()).isEqualTo(orderItems);
@@ -41,19 +40,16 @@ public class OrderTest {
 
     @Test
     public void shouldUpdateOrder() {
-        // Given
         Long orderId = 1L;
         OrderStatus initialStatus = OrderStatus.PENDING;
         OrderStatus updatedStatus = OrderStatus.SHIPPED;
 
         Order order = new Order();
         order.setId(orderId);
-        order.setOrderStatus(initialStatus);
+        order.setStatus(initialStatus);
 
-        // When
-        order.setOrderStatus(updatedStatus);
+        order.setStatus(updatedStatus);
 
-        // Then
         assertThat(order.getStatus()).isEqualTo(updatedStatus);
     }
 }

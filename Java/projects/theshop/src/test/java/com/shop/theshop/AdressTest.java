@@ -8,14 +8,12 @@ public class AdressTest {
 
     @Test
     public void shouldCreateAdress() {
-        // Given
         String street = "123 Main St";
         String city = "City";
         String state = "State";
         String zipcode = "12345";
         String country = "Country";
 
-        // When
         Adress adress = new Adress();
         adress.setStreet(street);
         adress.setCity(city);
@@ -23,7 +21,6 @@ public class AdressTest {
         adress.setZipcode(zipcode);
         adress.setCountry(country);
 
-        // Then
         assertThat(adress).isNotNull();
         assertThat(adress.getStreet()).isEqualTo(street);
         assertThat(adress.getCity()).isEqualTo(city);
@@ -34,7 +31,6 @@ public class AdressTest {
 
     @Test
     public void shouldUpdateAdress() {
-        // Given
         String street = "123 Main St";
         String city = "City";
         String state = "State";
@@ -51,11 +47,9 @@ public class AdressTest {
         String updatedStreet = "456 New St";
         String updatedCity = "New City";
 
-        // When
         adress.setStreet(updatedStreet);
         adress.setCity(updatedCity);
 
-        // Then
         assertThat(adress.getStreet()).isEqualTo(updatedStreet);
         assertThat(adress.getCity()).isEqualTo(updatedCity);
     }

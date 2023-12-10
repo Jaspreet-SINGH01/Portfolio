@@ -8,16 +8,13 @@ public class CategoryTest {
 
     @Test
     public void shouldCreateCategory() {
-        // Given
         Long categoryId = 1L;
         String categoryName = "Electronics";
 
-        // When
         Category category = new Category();
         category.setId(categoryId);
         category.setName(categoryName);
 
-        // Then
         assertThat(category).isNotNull();
         assertThat(category.getId()).isEqualTo(categoryId);
         assertThat(category.getName()).isEqualTo(categoryName);
@@ -25,7 +22,6 @@ public class CategoryTest {
 
     @Test
     public void shouldUpdateCategory() {
-        // Given
         Long categoryId = 1L;
         String initialCategoryName = "Electronics";
         String updatedCategoryName = "Clothing";
@@ -34,10 +30,8 @@ public class CategoryTest {
         category.setId(categoryId);
         category.setName(initialCategoryName);
 
-        // When
         category.setName(updatedCategoryName);
 
-        // Then
         assertThat(category.getName()).isEqualTo(updatedCategoryName);
     }
 }

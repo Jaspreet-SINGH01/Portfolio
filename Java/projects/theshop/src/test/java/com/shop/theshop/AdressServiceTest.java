@@ -1,4 +1,3 @@
-// Package dans src/test/java
 package com.shop.theshop;
 
 import com.shop.theshop.entities.Adress;
@@ -68,12 +67,10 @@ public class AdressServiceTest {
 
     @Test
     public void shouldDeleteAdress() {
-        // Given
         long adressId = 1L;
         Adress existingAdress = new Adress("123 Main Street", "City", "12345");
         when(adressRepository.findById(adressId)).thenReturn(Optional.of(existingAdress));
 
-        // When
         adressService.deleteAdress(adressId);
 
     }

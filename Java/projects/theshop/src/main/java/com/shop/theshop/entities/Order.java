@@ -65,4 +65,8 @@ public class Order {
     public void setStatus(OrderStatus status) {
         this.status = status;
     }
+
+    public boolean getStatus(OrderStatus pending) {
+        return false;
+    }
 }

@@ -18,6 +18,9 @@ public class Product {
     public Product(/*String newProduct, String description, double v*/) {
     }
 
+    public Product(String testProduct, String description, double v) {
+    }
+
     // Getters
     public Long getId() {
         return id;

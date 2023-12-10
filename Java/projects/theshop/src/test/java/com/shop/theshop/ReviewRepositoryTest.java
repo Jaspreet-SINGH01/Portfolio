@@ -21,7 +21,6 @@ public class ReviewRepositoryTest {
 
     @Test
     public void shouldSaveAndRetrieveReview() {
-        // Given
         Product product = new Product();
         User user = new User();
         int rating = 4;
@@ -29,10 +28,8 @@ public class ReviewRepositoryTest {
 
         Review review = new Review(product, user, rating, comment);
 
-        // When
         reviewRepository.save(review);
 
-        // Then
         Optional<Review> retrievedReview = reviewRepository.findById(review.getId());
         assertThat(retrievedReview).isPresent();
         assertThat(retrievedReview.get().getProduct()).isEqualTo(product);
@@ -43,7 +40,6 @@ public class ReviewRepositoryTest {
 
     @Test
     public void shouldFindReviewsByProduct() {
-        // Given
         Product product = new Product();
         User user1 = new User();
         User user2 = new User();
@@ -57,10 +53,8 @@ public class ReviewRepositoryTest {
 
         reviewRepository.saveAll(List.of(review1, review2));
 
-        // When
         List<Review> reviews = reviewRepository.findByProduct(product);
 
-        // Then
         assertThat(reviews).hasSize(2);
         assertThat(reviews).containsExactlyInAnyOrder(review1, review2);
     }

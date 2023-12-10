@@ -19,6 +19,12 @@ public class User {
     @Column(name = "username")
     private String username;
 
+    public User(String newuser, String newpassword, String newUser) {
+    }
+
+    public User() {
+
+    }
 
 
     // getters

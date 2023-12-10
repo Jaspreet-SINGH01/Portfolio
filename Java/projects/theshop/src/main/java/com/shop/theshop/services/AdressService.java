@@ -42,4 +42,8 @@ public class AdressService {
     public void deleteAdress(Long id) {
         adressRepository.deleteById(id);
     }
+
+    public Object getAllAdresses() {
+        return null;
+    }
 }

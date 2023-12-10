@@ -18,14 +18,11 @@ public class CartTest {
 
     @Test
     public void shouldCreateCart() {
-        // Given
         User user = new User();
         TotalPrice totalPrice = new TotalPrice();
 
-        // When
         Cart cart = new Cart(user, totalPrice);
 
-        // Then
         assertThat(cart).isNotNull();
         assertThat(cart.getUser()).isEqualTo(user);
         assertThat(cart.getTotalPrice()).isEqualTo(totalPrice);
@@ -33,40 +30,31 @@ public class CartTest {
 
     @Test
     public void shouldSetAndGetUser() {
-        // Given
         User user = new User();
         Cart cart = new Cart();
 
-        // When
         cart.setUser(user);
 
-        // Then
         assertThat(cart.getUser()).isEqualTo(user);
     }
 
     @Test
     public void shouldSetAndGetTotalPrice() {
-        // Given
         TotalPrice totalPrice = new TotalPrice();
         Cart cart = new Cart();
 
-        // When
         cart.setTotalPrice(totalPrice);
 
-        // Then
         assertThat(cart.getTotalPrice()).isEqualTo(totalPrice);
     }
 
     @Test
     public void shouldSetAndGetId() {
-        // Given
         Long id = 1L;
         Cart cart = new Cart();
 
-        // When
         cart.setId(id);
 
-        // Then
         assertThat(cart.getId()).isEqualTo(id);
     }
 }

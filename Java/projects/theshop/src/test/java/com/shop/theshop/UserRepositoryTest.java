@@ -18,13 +18,10 @@ public class UserRepositoryTest {
 
     @Test
     public void shouldSaveAndRetrieveUser() {
-        // Given
         User user = new User("testuser", "password123", "Test User");
 
-        // When
         userRepository.save(user);
 
-        // Then
         Optional<User> retrievedUserOptional = userRepository.findById(user.getId());
         assertThat(retrievedUserOptional).isPresent();
 
@@ -36,15 +33,12 @@ public class UserRepositoryTest {
 
     @Test
     public void shouldFindByUsername() {
-        // Given
         String username = "testuser";
         User user = new User(username, "password123", "Test User");
         userRepository.save(user);
 
-        // When
         Optional<User> retrievedUserOptional = userRepository.findByUsername(username);
 
-        // Then
         assertThat(retrievedUserOptional).isPresent();
         User retrievedUser = retrievedUserOptional.get();
         assertThat(retrievedUser.getUsername()).isEqualTo(username);
@@ -52,14 +46,11 @@ public class UserRepositoryTest {
 
     @Test
     public void shouldDeleteUser() {
-        // Given
         User user = new User("testuser", "password123", "Test User");
         userRepository.save(user);
 
-        // When
         userRepository.deleteById(user.getId());
 
-        // Then
         Optional<User> retrievedUserOptional = userRepository.findById(user.getId());
         assertThat(retrievedUserOptional).isEmpty();
     }

@@ -19,14 +19,11 @@ public class CategoryRepositoryTest {
 
     @Test
     public void shouldSaveAndRetrieveCategory() {
-        // Given
         Category category = new Category();
         category.setName("Electronics");
 
-        // When
         categoryRepository.save(category);
 
-        // Then
         Category retrievedCategory = categoryRepository.findById(category.getId()).orElse(null);
         assertThat(retrievedCategory).isNotNull();
         assertThat(retrievedCategory.getName()).isEqualTo("Electronics");
@@ -34,7 +31,6 @@ public class CategoryRepositoryTest {
 
     @Test
     public void shouldFindCategoryByName() {
-        // Given
         Category category1 = new Category();
         category1.setName("Electronics");
 
@@ -43,12 +39,10 @@ public class CategoryRepositoryTest {
 
         categoryRepository.saveAll(List.of(category1, category2));
 
-        // When
         Optional<Category> foundCategory1 = categoryRepository.findByName("Electronics");
         Optional<Category> foundCategory2 = categoryRepository.findByName("Clothing");
         Optional<Category> notFoundCategory = categoryRepository.findByName("NonExistentCategory");
 
-        // Then
         assertThat(foundCategory1).isPresent();
         assertThat(foundCategory1.get().getName()).isEqualTo("Electronics");
 

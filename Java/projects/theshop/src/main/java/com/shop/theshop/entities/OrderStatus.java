@@ -1,28 +1,41 @@
 package com.shop.theshop.entities;
 
+public enum OrderStatus {
+    PENDING("Pending"),
+    SHIPPED("Shipped"),
+    PROCESSING("Processing"),
+    COMPLETED("Completed");
+
+    private String displayName;
+
+    OrderStatus(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+}
+
+/*package com.shop.theshop.entities;
+
 import jakarta.persistence.*;
 
-@Entity
-@Table(name = "order_status")
-public class OrderStatus {
+public enum OrderStatus {
+    PENDING("Pending"),
+    SHIPPED("Shipped"), PROCESSING(), COMPLETED();
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
 
-    // Getters
-    public Long getId() {
-        return id;
-    }
-    public String getName() {
-        return name;
+    private String displayName;
+
+    OrderStatus(String displayName) {
+        this.displayName = displayName;
     }
 
-    // Setters
-    public void setId(Long id) {
-        this.id = id;
+    public String getDisplayName() {
+        return displayName;
     }
-    public void setName(String name) {
-        this.name = name;
-    }
-}
+}*/

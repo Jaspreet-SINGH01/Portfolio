@@ -28,21 +28,16 @@ public class CartService {
     }
 
     public Cart createCart(Cart cart) {
-        // Ajoutez une logique de validation ou de traitement si nécessaire
         return cartRepository.save(cart);
     }
 
     public Cart updateCart(Long id, Cart updatedCart) {
-        // Vérifiez si le panier existe avant de le mettre à jour
         Optional<Cart> optionalCart = cartRepository.findById(id);
         if (optionalCart.isPresent()) {
             Cart existingCart = optionalCart.get();
-            // Mettez à jour les champs nécessaires
             existingCart.setTotalPrice(updatedCart.getTotalPrice());
-            // Ajoutez d'autres mises à jour si nécessaire
             return cartRepository.save(existingCart);
         } else {
-            // Le panier n'existe pas, vous pouvez choisir de lever une exception ou de créer un nouveau panier
             return null;
         }
     }

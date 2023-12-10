@@ -69,11 +69,9 @@ public class ReviewControllerTest {
 
     @Test
     public void shouldUpdateReview() throws Exception {
-        // Given
         Review review = new Review();
         reviewService.createReview(review);
 
-        // When
         review.setRating(5);
         MvcResult result = mockMvc.perform(put("/reviews/{id}", review.getId())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -81,19 +79,15 @@ public class ReviewControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        // Then
         String content = result.getResponse().getContentAsString();
     }
 
     @Test
     public void shouldDeleteReview() throws Exception {
-        // Given
         Review review = new Review();
         reviewService.createReview(review);
 
-        // When
         mockMvc.perform(delete("/reviews/{id}", review.getId()))
                 .andExpect(status().isOk());
     }
 }
-

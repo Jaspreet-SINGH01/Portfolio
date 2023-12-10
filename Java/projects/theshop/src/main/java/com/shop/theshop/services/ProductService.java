@@ -28,22 +28,17 @@ public class ProductService {
     }
 
     public Product createProduct(Product product) {
-        // Ajoutez une logique de validation ou de traitement si nécessaire
         return productRepository.save(product);
     }
 
     public Product updateProduct(Long id, Product updatedProduct) {
-        // Vérifiez si le produit existe avant de le mettre à jour
         Optional<Product> optionalProduct = productRepository.findById(id);
         if (optionalProduct.isPresent()) {
             Product existingProduct = optionalProduct.get();
-            // Mettez à jour les champs nécessaires
             existingProduct.setName(updatedProduct.getName());
             existingProduct.setPrice(updatedProduct.getPrice());
-            // Ajoutez d'autres mises à jour si nécessaire
             return productRepository.save(existingProduct);
         } else {
-            // Le produit n'existe pas, vous pouvez choisir de lever une exception ou de créer un nouveau produit
             return null;
         }
     }

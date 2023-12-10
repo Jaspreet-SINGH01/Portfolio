@@ -1,4 +1,3 @@
-// Package dans src/test/java
 package com.shop.theshop;
 
 import com.shop.theshop.entities.Product;
@@ -42,14 +41,11 @@ public class ProductServiceTest {
 
     @Test
     public void shouldCreateProduct() {
-        // Given
         Product newProduct = new Product("New Product", "New Description", 39.99);
         when(productRepository.save(newProduct)).thenReturn(newProduct);
 
-        // When
         Product createdProduct = productService.createProduct(newProduct);
 
-        // Then
         assertThat(createdProduct).isNotNull();
         assertThat(createdProduct.getName()).isEqualTo("New Product");
         assertThat(createdProduct.getDescription()).isEqualTo("New Description");
@@ -58,17 +54,14 @@ public class ProductServiceTest {
 
     @Test
     public void shouldUpdateProduct() {
-        // Given
         long productId = 1L;
         Product existingProduct = new Product("Existing Product", "Description", 29.99);
         when(productRepository.findById(productId)).thenReturn(Optional.of(existingProduct));
 
         Product updatedProduct = new Product("Updated Product", "Updated Description", 39.99);
 
-        // When
         Product updatedProductResult = productService.updateProduct(productId, updatedProduct);
 
-        // Then
         assertThat(updatedProductResult).isNotNull();
         assertThat(updatedProductResult.getName()).isEqualTo("Updated Product");
         assertThat(updatedProductResult.getDescription()).isEqualTo("Updated Description");
@@ -77,14 +70,11 @@ public class ProductServiceTest {
 
     @Test
     public void shouldDeleteProduct() {
-        // Given
         long productId = 1L;
         Product existingProduct = new Product("Existing Product", "Description", 29.99);
         when(productRepository.findById(productId)).thenReturn(Optional.of(existingProduct));
 
-        // When
         productService.deleteProduct(productId);
 
-        // Then: You might want to verify that the delete method of the repository is called
     }
 }

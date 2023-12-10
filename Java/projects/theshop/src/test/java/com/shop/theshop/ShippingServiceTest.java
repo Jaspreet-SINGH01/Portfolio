@@ -26,34 +26,28 @@ public class ShippingServiceTest {
 
     @Test
     public void shouldGetAllShipping() {
-        // Given
         Shipping shipping1 = new Shipping();
         Shipping shipping2 = new Shipping();
         List<Shipping> shippingList = Arrays.asList(shipping1, shipping2);
 
         when(shippingRepository.findAll()).thenReturn(shippingList);
 
-        // When
         List<Shipping> result = shippingService.getAllShipping();
 
-        // Then
         assertThat(result).hasSize(2);
         verify(shippingRepository, times(1)).findAll();
     }
 
     @Test
     public void shouldGetShippingById() {
-        // Given
         Long shippingId = 1L;
         Shipping shipping = new Shipping();
         shipping.setId(shippingId);
 
         when(shippingRepository.findById(shippingId)).thenReturn(Optional.of(shipping));
 
-        // When
         Shipping result = shippingService.getShippingById(shippingId);
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(shippingId);
         verify(shippingRepository, times(1)).findById(shippingId);
@@ -61,22 +55,18 @@ public class ShippingServiceTest {
 
     @Test
     public void shouldCreateShipping() {
-        // Given
         Shipping shipping = new Shipping();
 
         when(shippingRepository.save(shipping)).thenReturn(shipping);
 
-        // When
         Shipping result = shippingService.createShipping(shipping);
 
-        // Then
         assertThat(result).isNotNull();
         verify(shippingRepository, times(1)).save(shipping);
     }
 
     @Test
     public void shouldUpdateShipping() {
-        // Given
         Long shippingId = 1L;
         Shipping existingShipping = new Shipping();
         existingShipping.setId(shippingId);
@@ -88,10 +78,8 @@ public class ShippingServiceTest {
         when(shippingRepository.findById(shippingId)).thenReturn(Optional.of(existingShipping));
         when(shippingRepository.save(existingShipping)).thenReturn(existingShipping);
 
-        // When
         Shipping result = shippingService.updateShipping(shippingId, updatedShipping);
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(shippingId);
         assertThat(result.getTrackingNumber()).isEqualTo("ABC123");
@@ -102,14 +90,11 @@ public class ShippingServiceTest {
 
     @Test
     public void shouldDeleteShipping() {
-        // Given
         Long shippingId = 1L;
         when(shippingRepository.existsById(shippingId)).thenReturn(true);
 
-        // When
         boolean result = shippingService.deleteShipping(shippingId);
 
-        // Then
         assertThat(result).isTrue();
         verify(shippingRepository, times(1)).existsById(shippingId);
         verify(shippingRepository, times(1)).deleteById(shippingId);

@@ -37,7 +37,6 @@ public class UserControllerTest {
 
     @Test
     public void shouldGetUserById() throws Exception {
-        // Assuming there is a user with id 1 in your test data
         long userId = 1L;
 
         mockMvc.perform(get("/users/{id}", userId))
@@ -55,15 +54,11 @@ public class UserControllerTest {
                         .content(objectMapper.writeValueAsString(newUser)))
                 .andExpect(status().isCreated());
 
-        // You can extract information from the response if needed
-        // For example, if the response contains the created user with an ID:
         User createdUser = objectMapper.readValue(result.andReturn().getResponse().getContentAsString(), User.class);
-        // Additional assertions or checks based on the createdUser
     }
 
     @Test
     public void shouldUpdateUser() throws Exception {
-        // Assuming there is a user with id 1 in your test data
         long userId = 1L;
 
         User updatedUser = new User("updateduser", "newpassword", "Updated User");
@@ -73,17 +68,14 @@ public class UserControllerTest {
                         .content(objectMapper.writeValueAsString(updatedUser)))
                 .andExpect(status().isOk());
 
-        // Additional assertions or checks if needed
     }
 
     @Test
     public void shouldDeleteUser() throws Exception {
-        // Assuming there is a user with id 1 in your test data
         long userId = 1L;
 
         mockMvc.perform(delete("/users/{id}", userId))
                 .andExpect(status().isOk());
 
-        // Additional assertions or checks if needed
     }
 }

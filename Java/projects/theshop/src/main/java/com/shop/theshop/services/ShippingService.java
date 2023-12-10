@@ -1,4 +1,3 @@
-// Package dans src/main/java
 package com.shop.theshop.services;
 
 import com.shop.theshop.entities.Shipping;
