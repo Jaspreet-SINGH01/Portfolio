@@ -37,7 +37,7 @@ public class Cart {
     }
 
     public void setUser(User user) {
-        this.user = user;  // Correction: changer setCustomer en setUser
+        this.user = user;
     }
 
     public TotalPrice getTotalPrice() {
