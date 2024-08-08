@@ -79,7 +79,7 @@ import java.util.stream.Collectors;
             return produitRepository.trierProduitsNomsPrix();
         }
 
-        public ProduitDTO convertEntityToDto(Produit produit) {
+        public ProduitDTO convertEntityToDto(ProduitDTO p) {
             /*ProduitDTO produitDTO = new ProduitDTO();
 
             produitDTO.setIdProduit(p.getIdProduit());
@@ -99,7 +99,7 @@ import java.util.stream.Collectors;
                     .build();*/
 
             modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.LOOSE);
-            ProduitDTO produitDTO= modelMapper.map(produit, ProduitDTO.class);
+            ProduitDTO produitDTO= modelMapper.map(p, ProduitDTO.class);
             return produitDTO;
         }
 
@@ -113,8 +113,13 @@ import java.util.stream.Collectors;
             produit.setCategorie(produit.getCategorie());
         return produit;*/
 
-        Produit produit = new Produit();
+        Produit produit = new Produit(null, null, null);
         produit = modelMapper.map(produitDto, Produit.class);
         return produit;
+    }
+    @Override
+    public ProduitDTO convertEntityToDto(Produit p) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'convertEntityToDto'");
     }
 }

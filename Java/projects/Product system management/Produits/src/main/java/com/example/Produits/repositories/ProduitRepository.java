@@ -1,5 +1,6 @@
 package com.example.Produits.repositories;
 
+import com.example.Produits.dto.ProduitDTO;
 import com.example.Produits.entities.Categorie;
 import com.example.Produits.entities.Produit;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -28,5 +29,6 @@ public interface ProduitRepository extends JpaRepository<Produit, Long> {
 
     @Query("select p from Produit p order by p.nomProduit ASC, p.prixProduit DESC")
     List<Produit> trierProduitsNomsPrix ();
+    ProduitDTO save(ProduitDTO convertEntityToDto);
 
 }
