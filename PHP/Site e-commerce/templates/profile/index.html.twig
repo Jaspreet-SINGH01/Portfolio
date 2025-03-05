@@ -1,0 +1,74 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Coucou {{ app.user.firstname }} {{ app.user.lastname }} !{% endblock %}
+
+{% block body %}
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Audiowide&display=swap');
+</style>
+
+<div class="grix xs4 container" style="margin: 30px; font-family: 'Audiowide', cursive; font-size: 30px">
+    <div class="col-xs4">
+        <h1 style="text-align: center;">Profil de {{ app.user.firstname }} {{ app.user.lastname }} </h1>
+    </div>
+    <div>
+    <div class="col-xs1">Nom : {{ app.user.lastname }}</div>
+    <br>
+    <div class="col-xs1">Prénom : {{ app.user.firstname }}</div>
+    <br>
+    <div class="col-xs1">Email : {{ app.user.email }}</div>
+    <br>
+    <div class="col-xs1">Adresse : {{ app.user.adress }}, {{ app.user.zipcode }} {{ app.user.city }} </div>
+
+    <br>
+    <div class="col-xs4" style="margin: 10px; text-align: center; font-size: 30px">
+        <a href="{{ path('edit_profile') }}" class="btn blue">Modifier le profil</a>
+        {# <a href="{{ path('app_forgot_password_request') }}" class="btn blue">Modifier le mot de passe</a> #}
+    </div></div>
+</div>
+
+<div class="container mt-4 mb-4 p-3 d-flex justify-content-center">
+  <div class="card p-4">
+    <div
+      class="image d-flex flex-column justify-content-center align-items-center"
+    >
+      <button class="btn btn-secondary">
+        <img src="{{ asset('/upload/images/icons/user.png') }}" height="100" width="100" />
+      </button>
+      <span class="name mt-3">{{ app.user.firstname }} {{ app.user.lastname }} </span>
+      <span class="idd">@{{ app.user.firstname }}{{ app.user.lastname }}</span>
+      <div
+        class="d-flex flex-row justify-content-center align-items-center gap-2"
+      >
+        <span class="idd1">{{ app.user.id }}</span>
+        <span><i class="fa fa-copy"></i></span>
+      </div>
+      {# <div class="d-flex mt-2">
+        <button class="btn1 btn-dark">Edit Profile</button>
+      </div> #}
+      <div class="text mt-3" style="text-align: center;">
+        <span>
+          {{ app.user.firstname }} {{ app.user.lastname }} fait désormais partie de l'équipe ! <br>
+           C'est l'heure de shopper {{ app.user.firstname }} !
+          <br /><br />
+          
+        </span>
+      </div>
+      <div
+        class="gap-3 mt-3 icons d-flex flex-row justify-content-center align-items-center"
+      >
+        <span><i class="fa fa-twitter"></i></span>
+        <span><i class="fa fa-facebook-f"></i></span>
+        <span><i class="fa fa-instagram"></i></span>
+        <span><i class="fa fa-linkedin"></i></span>
+      </div>
+      
+    </div>
+  </div> 
+</div>
+
+
+{% endblock %}
+
+  
