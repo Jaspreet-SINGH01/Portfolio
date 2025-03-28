@@ -8,8 +8,7 @@ public enum Role {
     USER(Stream.of(
             Permission.VIDEO_VIEW,
             Permission.VIDEO_LIKE_DISLIKE,
-            Permission.PLAYLIST_ADD_VIDEO
-    ).collect(Collectors.toSet())),
+            Permission.PLAYLIST_ADD_VIDEO).collect(Collectors.toSet())),
     ADMIN(Stream.of(
             Permission.VIDEO_VIEW,
             Permission.VIDEO_LIKE_DISLIKE,
@@ -17,8 +16,7 @@ public enum Role {
             Permission.VIDEO_ADD,
             Permission.VIDEO_UPDATE,
             Permission.VIDEO_DELETE,
-            Permission.VIDEO_ADD_DESCRIPTION
-    ).collect(Collectors.toSet()));
+            Permission.VIDEO_ADD_DESCRIPTION).collect(Collectors.toSet()));
 
     private final Set<Permission> permissions;
 
