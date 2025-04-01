@@ -2,36 +2,100 @@ package com.videoflix.subscriptions_microservice.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
-@Table(name = "subscriptions")
+@Table(name = "subscriptions", indexes = {
+        @Index(name = "idx_status", columnList = "status"),
+        @Index(name = "idx_customer_id", columnList = "customer_id")
+})
 @Data
 public class Subscription {
 
+    /** Identifiant unique de l'abonnement */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** Niveau d'abonnement associé (ex: Basic, Premium, Ultra) */
     @ManyToOne
-    @JoinColumn(name = "level_id")
-    private SubscriptionLevel subscriptionLevel; // Niveau d'abonnement
-    
+    @JoinColumn(name = "level_id", nullable = false)
+    private SubscriptionLevel subscriptionLevel;
+
+    /** Promotion */
     @ManyToOne
     @JoinColumn(name = "promotion_code_id")
-    private Promotion promotion; // Niveau d'abonnement
+    private Promotion promotion;
 
-    @Column(name = "start_date")
-    private java.time.LocalDateTime startDate;
+    /** Date de début de l'abonnement */
+    @Column(name = "start_date", nullable = false)
+    private LocalDateTime startDate;
 
+    /** Date de fin de l'abonnement */
     @Column(name = "end_date")
-    private java.time.LocalDateTime endDate;
+    private LocalDateTime endDate;
 
-    // Ajout d'autres champs pertinents pour l'abonnement
-    @Column(name = "status")
-    private String status; // Par exemple, "Active", "Cancelled", "Expired"
+    /** Statut actuel de l'abonnement (ACTIVE, CANCELLED, etc.) */
+    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private SubscriptionStatus status;
 
-    @Column(name = "auto_renew")
+    /** Indique si l'abonnement se renouvelle automatiquement */
+    @Column(name = "auto_renew", nullable = false)
     private boolean autoRenew;
 
-    // Ajouter d'autres champs comme la date de paiement, l'identifiant de paiement,
+    /** Date du dernier paiement effectué */
+    @Column(name = "payment_date")
+    private LocalDateTime paymentDate;
+
+    /** Identifiant du paiement dans le système de paiement */
+    @Column(name = "payment_id")
+    private String paymentId;
+
+    /** Date prévue pour le prochain renouvellement */
+    @Column(name = "next_renewal_date")
+    private LocalDateTime nextRenewalDate;
+
+    /** Identifiant du client dans la passerelle de paiement (Stripe) */
+    @Column(name = "customer_id", nullable = false)
+    private String customerId;
+
+    /** Identifiant de l'abonnement dans Stripe */
+    @Column(name = "subscription_id")
+    private String stripeSubscriptionId;
+
+    /** Identifiant du prix appliqué dans Stripe */
+    @Column(name = "price_id")
+    private String priceId;
+
+    /** Message d'erreur du dernier paiement */
+    @Column(name = "last_payment_error")
+    private String lastPaymentError;
+
+    @Column(name = "trial_start_date")
+    private LocalDateTime trialStartDate; // Date de début de l'essai gratuit
+
+    @Column(name = "trial_end_date")
+    private LocalDateTime trialEndDate; // Date de fin de l'essai gratuit
+
+    @Column(name = "refund_date")
+    private LocalDateTime refundDate; // Date du remboursement
+
+    @Column(name = "refund_amount")
+    private double refundAmount; // Montant du remboursement
+
+    @OneToMany(mappedBy = "subscription", cascade = CascadeType.ALL)
+    private List<Payment> payments; // Liste des paiements associés à l'abonnement
+
+    /**
+     * Enumération des statuts possibles pour un abonnement.
+     * Utiliser un enum plutôt qu'une chaîne de caractères améliore la type-safety.
+     */
+    public enum SubscriptionStatus {
+        ACTIVE, // Abonnement actif et en cours
+        CANCELLED, // Abonnement annulé mais encore valide jusqu'à sa date de fin
+        EXPIRED, // Abonnement expiré
+        PENDING // Paiement en attente ou en cours de traitement
+    }
 }

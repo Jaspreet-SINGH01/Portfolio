@@ -1,8 +1,10 @@
 package com.videoflix.subscriptions_microservice.controllers;
 
+import com.stripe.exception.StripeException;
 import com.videoflix.subscriptions_microservice.entities.Promotion;
 import com.videoflix.subscriptions_microservice.entities.Subscription;
 import com.videoflix.subscriptions_microservice.entities.SubscriptionLevel;
+import com.videoflix.subscriptions_microservice.services.StripePaymentService;
 import com.videoflix.subscriptions_microservice.services.SubscriptionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,7 @@ public class SubscriptionController {
 
     private final SubscriptionService subscriptionService;
     private final RestTemplate restTemplate;
+    private StripePaymentService stripePaymentService;
 
     public SubscriptionController(SubscriptionService subscriptionService, RestTemplate restTemplate) {
         this.subscriptionService = subscriptionService;
@@ -166,5 +169,40 @@ public class SubscriptionController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    // Stripe
+
+    @PostMapping("/{id}/stripe-customer")
+    public ResponseEntity<String> createStripeCustomer(@PathVariable Long id, @RequestParam String email,
+            @RequestParam String name) throws StripeException {
+        String customerId = stripePaymentService.createStripeCustomer(email, name);
+        return ResponseEntity.ok(customerId);
+    }
+
+    @PostMapping("/{id}/stripe-subscription")
+    public ResponseEntity<String> createStripeSubscription(@PathVariable Long id, @RequestParam String customerId,
+            @RequestParam String priceId) throws StripeException {
+        Subscription subscription = new Subscription();
+        subscription.setCustomerId(customerId);
+        subscription.setPriceId(priceId);
+        Subscription createdSubscription = stripePaymentService.createStripeSubscription(subscription);
+        return ResponseEntity.ok(createdSubscription.getStripeSubscriptionId());
+    }
+
+    @PostMapping("/{id}/stripe-subscription-trial")
+    public ResponseEntity<Subscription> createStripeSubscriptionWithTrial(@PathVariable Long id,
+            @RequestBody Subscription subscription, @RequestParam long trialPeriodDays) {
+        Subscription createdSubscription = stripePaymentService.createStripeSubscriptionWithTrial(subscription,
+                trialPeriodDays);
+        return ResponseEntity.ok(createdSubscription);
+    }
+
+    @PostMapping("/{id}/refund")
+    public ResponseEntity<Subscription> refundSubscription(@PathVariable Long id, @RequestParam double amount,
+            @RequestParam String reason) throws StripeException {
+        Subscription refundedSubscription = stripePaymentService
+                .refundSubscription(subscriptionService.getSubscriptionById(id), amount, reason);
+        return ResponseEntity.ok(refundedSubscription);
     }
 }

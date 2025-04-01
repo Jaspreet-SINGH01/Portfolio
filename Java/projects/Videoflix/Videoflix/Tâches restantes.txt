@@ -1,12 +1,3 @@
-2. Gestion des paiements :
-
-Intégration avec des passerelles de paiement : Intégrer des passerelles de paiement (Stripe, PayPal, etc.) pour gérer les paiements des abonnements.
-Gestion des renouvellements : Gérer les renouvellements automatiques des abonnements.
-Gestion des factures : Générer et envoyer des factures aux utilisateurs.
-Gestion des remboursements : Permettre le remboursement des abonnements.
-
-
-
 3. Gestion des accès :
 
 Attribution de rôles et de permissions : Attribuer des rôles et des permissions aux utilisateurs en fonction de leur niveau d'abonnement.
