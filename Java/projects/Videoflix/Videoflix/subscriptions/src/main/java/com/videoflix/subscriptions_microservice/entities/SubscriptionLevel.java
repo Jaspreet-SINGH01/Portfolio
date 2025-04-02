@@ -12,12 +12,19 @@ public class SubscriptionLevel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name", unique = true)
-    private String name; // Nom du niveau (Basic, Premium, Ultra)
+    @Column(name = "level", unique = true)
+    @Enumerated(EnumType.STRING)
+    private Level level; // Niveau d'abonnement (BASIC, PREMIUM, ULTRA)
 
     @Column(name = "price")
     private double price; // Prix de l'abonnement
 
     @Column(name = "features")
     private String features; // Caractéristiques de l'abonnement (liste de fonctionnalités)
+
+    public enum Level {
+        BASIC,
+        PREMIUM,
+        ULTRA
+    }
 }
