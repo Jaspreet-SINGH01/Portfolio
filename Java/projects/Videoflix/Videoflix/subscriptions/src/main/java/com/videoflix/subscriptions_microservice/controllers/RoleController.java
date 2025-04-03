@@ -45,7 +45,4 @@ public class RoleController {
         roleService.assignRoleToUser(userId, roleName);
         return ResponseEntity.status(HttpStatus.CREATED).body("Role assigned to user.");
     }
-
-    // Ajoutez d'autres points de terminaison pour gérer les rôles et les
-    // permissions
 }

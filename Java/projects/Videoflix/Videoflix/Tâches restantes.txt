@@ -13,6 +13,50 @@ Définissez les actions ou les ressources auxquelles les utilisateurs peuvent ac
 Les permissions sont granulaires et peuvent être combinées pour créer des rôles.
 
 
+Rôles :
+
+Utilisateur Basic (Gratuit) :
+
+Accès limité au catalogue de vidéos.
+Publicité pendant la lecture des vidéos.
+Qualité vidéo standard.
+Abonné Premium :
+
+Accès complet au catalogue de vidéos.
+Lecture sans publicité.
+Qualité vidéo HD.
+Téléchargement de vidéos pour une lecture hors ligne.
+Abonné Ultra :
+
+Tous les avantages de l'abonnement Premium.
+Qualité vidéo 4K et HDR.
+Accès anticipé aux nouvelles sorties.
+Contenu exclusif (par exemple, making-of, interviews).
+Administrateur :
+
+Accès complet à toutes les fonctionnalités.
+Gestion des utilisateurs et des abonnements.
+Gestion du catalogue de vidéos.
+Analyse des données et des statistiques.
+Permissions :
+
+Accéder au contenu gratuit : Permet de visionner les vidéos disponibles pour les utilisateurs gratuits.
+Accéder au contenu Premium : Permet de visionner les vidéos disponibles pour les abonnés Premium et Ultra.
+Télécharger des vidéos : Permet de télécharger des vidéos pour une lecture hors ligne (Premium et Ultra).
+Accéder au contenu exclusif : Permet de visionner le contenu exclusif (Ultra).
+Gérer les utilisateurs : Permet de créer, modifier et supprimer des utilisateurs (Administrateur).
+Gérer les abonnements : Permet de gérer les abonnements des utilisateurs (Administrateur).
+Gérer le catalogue : Permet d'ajouter, modifier et supprimer des vidéos du catalogue (Administrateur).
+Accéder aux statistiques : Permet de consulter les données et les statistiques d'utilisation (Administrateur).
+Combinaisons de rôles et de permissions :
+
+Utilisateur Basic : Accéder au contenu gratuit.
+Abonné Premium : Accéder au contenu Premium, Télécharger des vidéos.
+Abonné Ultra : Accéder au contenu Premium, Télécharger des vidéos, Accéder au contenu exclusif.
+Administrateur : Gérer les utilisateurs, Gérer les abonnements, Gérer le catalogue, Accéder aux statistiques.
+
+
+
 2. Association des rôles aux niveaux d'abonnement :
 
 Associez chaque niveau d'abonnement à un rôle spécifique.
