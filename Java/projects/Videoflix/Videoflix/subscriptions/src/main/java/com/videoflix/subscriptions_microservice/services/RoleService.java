@@ -8,9 +8,9 @@ import com.videoflix.subscriptions_microservice.repositories.RoleRepository;
 import com.videoflix.subscriptions_microservice.repositories.UserRoleRepository;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +44,7 @@ public class RoleService {
 
         if (role != null) {
             UserRole userRole = new UserRole();
-            userRole.setUserId(userId);
+            userRole.setId(userId);
             userRole.setRoleId(role.getId());
             userRoleRepository.save(userRole);
         } else {
@@ -83,7 +83,7 @@ public class RoleService {
 
         if (role != null) {
             UserRole userRole = new UserRole();
-            userRole.setUserId(userId);
+            userRole.setId(userId);
             userRole.setRoleId(role.getId());
             userRoleRepository.save(userRole);
         } else {
@@ -111,7 +111,7 @@ public class RoleService {
         if (role != null) {
             return role.getPermissions();
         }
-        return null; // ou lancez une exception
+        return Collections.emptyList(); // ou lancer une exception
     }
 
     @Transactional
@@ -178,8 +178,8 @@ public class RoleService {
         List<UserRole> userRoles = userRoleRepository.findByUserId(userId);
 
         return userRoles.stream()
-                .map(userRole -> roleRepository.findById(userRole.getRoleId()).orElse(null))
+                .map(userRole -> roleRepository.findById(userRole.getId()).orElse(null))
                 .filter(Objects::nonNull) // Filtrer les valeurs nulles
-                .collect(Collectors.toList());
+                .toList();
     }
 }
