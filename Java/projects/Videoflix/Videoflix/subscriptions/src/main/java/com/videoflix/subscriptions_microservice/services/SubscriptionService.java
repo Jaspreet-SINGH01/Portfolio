@@ -135,8 +135,19 @@ public class SubscriptionService {
                      // valide
     }
 
-    // Ajouter d'autres méthodes de logique métier ici, par exemple :
-    // - Calculer le prix de l'abonnement en fonction du niveau
-    // - Gérer les renouvellements
-    // - Envoyer des notifications aux utilisateurs
+    public void processSubscriptionRenewal(Long userId, String userEmail, String subscriptionType, String pushToken) {
+        // Logique de renouvellement de l'abonnement
+        // ...
+        emailService.sendSubscriptionRenewalNotification(userEmail, subscriptionType);
+        if (pushToken != null && !pushToken.isEmpty()) {
+            pushNotificationService.sendSubscriptionRenewalPushNotification(pushToken, subscriptionType);
+        }
+    }
+
+    public void checkSubscriptionExpirations() {
+        // Logique pour vérifier les abonnements expirant bientôt
+        String userEmail = "[Adresse e-mail de l'utilisateur]";
+        String subscriptionType = "[Type d'abonnement de l'utilisateur]";
+        EmailService.sendSubscriptionExpirationNotification(userEmail, subscriptionType);
+    }
 }
