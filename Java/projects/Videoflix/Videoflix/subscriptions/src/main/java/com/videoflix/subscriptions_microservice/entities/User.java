@@ -29,6 +29,9 @@ public class User {
     @Column(name = "last_name", nullable = false)
     private String lastname;
 
+    @Column(name = "push_token")
+    private String pushToken;
+
     @OneToMany(mappedBy = "user")
     private List<UserRole> userRoles;
 }

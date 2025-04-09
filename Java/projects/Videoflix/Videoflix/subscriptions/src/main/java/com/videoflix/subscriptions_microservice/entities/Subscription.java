@@ -18,6 +18,11 @@ public class Subscription {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // L'entité User liée à cet abonnement
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     /** Niveau d'abonnement associé (ex: Basic, Premium, Ultra) */
     @ManyToOne
     @JoinColumn(name = "level_id", nullable = false)
@@ -88,14 +93,11 @@ public class Subscription {
     @OneToMany(mappedBy = "subscription", cascade = CascadeType.ALL)
     private List<Payment> payments; // Liste des paiements associés à l'abonnement
 
-    /**
-     * Enumération des statuts possibles pour un abonnement.
-     * Utiliser un enum plutôt qu'une chaîne de caractères améliore la type-safety.
-     */
     public enum SubscriptionStatus {
         ACTIVE, // Abonnement actif et en cours
         CANCELLED, // Abonnement annulé mais encore valide jusqu'à sa date de fin
         EXPIRED, // Abonnement expiré
-        PENDING // Paiement en attente ou en cours de traitement
+        PENDING, // Paiement en attente ou en cours de traitement
+        PAYMENT_FAILED // Paiement échoué
     }
 }
