@@ -1,11 +1,14 @@
 package com.videoflix.subscriptions_microservice.config;
 
 import com.videoflix.subscriptions_microservice.services.CustomUserDetailsService;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -48,13 +51,21 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/public/**").permitAll() // Autoriser l'accès public
-                        .anyRequest().authenticated() // Autres requêtes nécessitant l'authentification
-                )
+                        .requestMatchers("/public/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults());
 
         http.authenticationProvider(authenticationProvider());
 
         return http.build();
+    }
+
+    @Autowired
+    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+        auth.inMemoryAuthentication()
+                .withUser("admin").password("").roles("ADMIN")
+                .and()
+                .withUser("user").password("").roles("USER");
     }
 }

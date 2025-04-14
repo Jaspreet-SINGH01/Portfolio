@@ -6,6 +6,9 @@ import com.videoflix.subscriptions_microservice.entities.Subscription;
 import com.videoflix.subscriptions_microservice.entities.SubscriptionLevel;
 import com.videoflix.subscriptions_microservice.services.StripePaymentService;
 import com.videoflix.subscriptions_microservice.services.SubscriptionService;
+
+import jakarta.validation.Valid;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -47,7 +50,7 @@ public class SubscriptionController {
     }
 
     @PostMapping
-    public ResponseEntity<Subscription> createSubscription(@RequestBody Subscription subscription,
+    public ResponseEntity<Subscription> createSubscription(@RequestBody @Valid Subscription subscription,
             @RequestParam Long userId) {
         // Crée un nouvel abonnement et met à jour le subscriptionId de l'utilisateur
         // dans le microservice users
@@ -63,7 +66,7 @@ public class SubscriptionController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Subscription> updateSubscription(@PathVariable Long id,
-            @RequestBody Subscription subscription) {
+            @RequestBody @Valid Subscription subscription) {
         // Met à jour un abonnement existant
         Subscription updatedSubscription = subscriptionService.updateSubscription(id, subscription);
         if (updatedSubscription != null) {
@@ -204,5 +207,12 @@ public class SubscriptionController {
         Subscription refundedSubscription = stripePaymentService
                 .refundSubscription(subscriptionService.getSubscriptionById(id), amount, reason);
         return ResponseEntity.ok(refundedSubscription);
+    }
+
+    // Historique des abonnements
+    @GetMapping("/subscriptions/{id}/history")
+    public ResponseEntity<List<Object[]>> getSubscriptionHistory(@PathVariable Long id) {
+        List<Object[]> history = subscriptionService.getSubscriptionHistory(id);
+        return ResponseEntity.ok(history);
     }
 }

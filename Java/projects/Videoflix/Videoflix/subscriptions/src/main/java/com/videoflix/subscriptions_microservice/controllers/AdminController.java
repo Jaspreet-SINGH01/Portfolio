@@ -1,8 +1,12 @@
 package com.videoflix.subscriptions_microservice.controllers;
 
+import com.videoflix.subscriptions_microservice.dtos.AdminUpdateRequest;
 import com.videoflix.subscriptions_microservice.entities.Role;
 import com.videoflix.subscriptions_microservice.entities.User;
 import com.videoflix.subscriptions_microservice.services.RoleService;
+
+import jakarta.validation.Valid;
+
 import com.videoflix.subscriptions_microservice.repositories.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -74,7 +78,10 @@ public class AdminController {
         }
     }
 
-    // Ajouter d'autres points de terminaison pour la gestion des abonnements si
-    // nécessaire
-    // (par exemple, lister les abonnements, modifier les abonnements, etc.)
+    @PostMapping("/users/{id}")
+    public ResponseEntity<String> updateUser(@PathVariable Long id,
+            @Valid @RequestBody AdminUpdateRequest updateRequest) {
+        // Si la validation réussit, updateRequest contient des données valides
+        return ResponseEntity.ok("Utilisateur mis à jour.");
+    }
 }

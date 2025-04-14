@@ -1,9 +1,14 @@
 package com.videoflix.subscriptions_microservice.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import org.hibernate.envers.Audited;
+
+import com.videoflix.subscriptions_microservice.validations.ValidSubscriptionLevel;
 
 @Entity
 @Table(name = "subscriptions", indexes = {
@@ -11,6 +16,7 @@ import java.util.List;
         @Index(name = "idx_customer_id", columnList = "customer_id")
 })
 @Data
+@Audited
 public class Subscription {
 
     /** Identifiant unique de l'abonnement */
@@ -26,6 +32,8 @@ public class Subscription {
     /** Niveau d'abonnement associé (ex: Basic, Premium, Ultra) */
     @ManyToOne
     @JoinColumn(name = "level_id", nullable = false)
+    @NotNull(message = "Le type d'abonnement est obligatoire")
+    @ValidSubscriptionLevel
     private SubscriptionLevel subscriptionLevel;
 
     /** Promotion */

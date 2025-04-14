@@ -27,7 +27,7 @@ public class RenewalTask {
     @Scheduled(cron = "0 0 0 * * *") // Exécute tous les jours à minuit
     public void checkAndRenewSubscriptions() {
         logger.info("Début de la tâche de renouvellement des abonnements.");
-        List<Subscription> subscriptions = subscriptionService.getAllSubscriptions();
+        List<Subscription> subscriptions = subscriptionService.getAllSubscriptions(0, Integer.MAX_VALUE);
         LocalDateTime now = LocalDateTime.now();
 
         for (Subscription subscription : subscriptions) {

@@ -1,5 +1,6 @@
 package com.videoflix.subscriptions_microservice.services;
 
+import com.videoflix.subscriptions_microservice.dtos.AdminUpdateSubscriptionRequest;
 import com.videoflix.subscriptions_microservice.entities.Promotion;
 import com.videoflix.subscriptions_microservice.entities.Subscription;
 import com.videoflix.subscriptions_microservice.entities.SubscriptionLevel;
@@ -9,13 +10,23 @@ import com.videoflix.subscriptions_microservice.repositories.SubscriptionLevelRe
 import com.videoflix.subscriptions_microservice.repositories.SubscriptionRepository;
 import com.videoflix.subscriptions_microservice.repositories.UserRepository;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 
+import org.hibernate.envers.AuditReader;
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.envers.query.AuditEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,22 +40,27 @@ public class SubscriptionService {
     private final SubscriptionLevelRepository subscriptionLevelRepository;
     private final PromotionRepository promotionRepository;
     private final UserRepository userRepository;
+    private final EntityManager entityManager;
 
     public SubscriptionService(SubscriptionRepository subscriptionRepository,
             SubscriptionLevelRepository subscriptionLevelRepository,
             PromotionRepository promotionRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            EntityManager entityManager) {
         this.subscriptionRepository = subscriptionRepository;
         this.subscriptionLevelRepository = subscriptionLevelRepository;
         this.promotionRepository = promotionRepository;
         this.userRepository = userRepository;
+        this.entityManager = entityManager;
     }
 
     // Méthodes pour gérer les abonnements
 
     public Subscription createSubscription(Subscription subscription) {
-        // Crée un nouvel abonnement et le sauvegarde dans la base de données
-        return subscriptionRepository.save(subscription);
+        validateSubscription(subscription);
+
+        return subscriptionRepository.save(subscription); // Crée un nouvel abonnement et le sauvegarde dans la base de
+                                                          // données
     }
 
     public Subscription getSubscriptionById(Long id) {
@@ -53,9 +69,10 @@ public class SubscriptionService {
         return subscriptionOptional.orElse(null);
     }
 
-    public List<Subscription> getAllSubscriptions() {
-        // Récupère tous les abonnements
-        return subscriptionRepository.findAll();
+    public List<Subscription> getAllSubscriptions(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Subscription> subscriptionPage = subscriptionRepository.findAll(pageable);
+        return subscriptionPage.getContent();
     }
 
     public Subscription updateSubscription(Long id, Subscription subscription) {
@@ -154,12 +171,12 @@ public class SubscriptionService {
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MESSAGE + userId));
         List<Subscription> userSubscriptions = subscriptionRepository.findByUser(user);
         Subscription activeSubscription = userSubscriptions.stream()
-                .filter(sub -> sub.getStatus() == Subscription.SubscriptionStatus.ACTIVE) // Utilisez l'enum
+                .filter(sub -> sub.getStatus() == Subscription.SubscriptionStatus.ACTIVE)
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("No active subscription found for user: " + userId));
 
         activeSubscription.setEndDate(activeSubscription.getEndDate().plusMonths(1));
-        activeSubscription.setStatus(Subscription.SubscriptionStatus.ACTIVE); // Utilisez l'enum
+        activeSubscription.setStatus(Subscription.SubscriptionStatus.ACTIVE);
         subscriptionRepository.save(activeSubscription);
         EmailService emailService = new EmailService(null);
         // Logique de renouvellement de l'abonnement
@@ -225,12 +242,12 @@ public class SubscriptionService {
         List<Subscription> userSubscriptions = subscriptionRepository.findByUser(user);
         Subscription subscriptionToUpdate = userSubscriptions.stream()
                 .filter(sub -> sub.getStatus() == Subscription.SubscriptionStatus.ACTIVE
-                        || sub.getStatus() == Subscription.SubscriptionStatus.PENDING) // Utilisez l'enum
+                        || sub.getStatus() == Subscription.SubscriptionStatus.PENDING)
                 .findFirst()
                 .orElse(null);
 
         if (subscriptionToUpdate != null) {
-            subscriptionToUpdate.setStatus(Subscription.SubscriptionStatus.PAYMENT_FAILED); // Utilisez l'enum
+            subscriptionToUpdate.setStatus(Subscription.SubscriptionStatus.PAYMENT_FAILED);
             subscriptionRepository.save(subscriptionToUpdate);
             EmailService emailService = new EmailService(null);
             emailService.sendPaymentFailedNotification(userEmail, subscriptionType);
@@ -248,13 +265,13 @@ public class SubscriptionService {
         List<Subscription> userSubscriptions = subscriptionRepository.findByUser(user);
         Subscription subscriptionToUpdate = userSubscriptions.stream()
                 .filter(sub -> sub.getStatus() == Subscription.SubscriptionStatus.PENDING
-                        || sub.getStatus() == Subscription.SubscriptionStatus.PAYMENT_FAILED) // Utilisez l'enum
+                        || sub.getStatus() == Subscription.SubscriptionStatus.PAYMENT_FAILED)
                 .findFirst()
                 .orElseGet(() -> userSubscriptions.stream().max((s1, s2) -> s1.getEndDate().compareTo(s2.getEndDate()))
                         .orElse(null));
 
         if (subscriptionToUpdate != null) {
-            subscriptionToUpdate.setStatus(Subscription.SubscriptionStatus.ACTIVE); // Utilisez l'enum
+            subscriptionToUpdate.setStatus(Subscription.SubscriptionStatus.ACTIVE);
             if (!subscriptionToUpdate.getStartDate().isBefore(LocalDateTime.now())) {
                 subscriptionToUpdate.setStartDate(LocalDateTime.now());
                 subscriptionToUpdate.setEndDate(LocalDateTime.now().plusMonths(1));
@@ -284,5 +301,92 @@ public class SubscriptionService {
         newSubscription.setSubscriptionLevel(subscriptionLevel);
         newSubscription.setStatus(Subscription.SubscriptionStatus.ACTIVE);
         return subscriptionRepository.save(newSubscription);
+    }
+
+    // Historique des abonnements
+    public List<Object[]> getSubscriptionHistory(Long subscriptionId) {
+        AuditReader reader = AuditReaderFactory.get(entityManager);
+
+        @SuppressWarnings("unchecked")
+        List<Object[]> result = reader.createQuery()
+                .forRevisionsOfEntity(Subscription.class, false, true)
+                .add(AuditEntity.id().eq(subscriptionId))
+                .getResultList();
+        return result;
+    }
+
+    @Transactional
+    public Subscription updateSubscriptionByAdmin(Long id, AdminUpdateSubscriptionRequest updateRequest) {
+        Optional<Subscription> subscriptionOptional = subscriptionRepository.findById(id);
+        if (subscriptionOptional.isPresent()) {
+            Subscription subscription = subscriptionOptional.get();
+
+            if (updateRequest.getStatus() != null) {
+                subscription.setStatus(updateRequest.getStatus());
+            }
+            if (updateRequest.getStartDate() != null) {
+                subscription.setStartDate(updateRequest.getStartDate());
+            }
+            if (updateRequest.getEndDate() != null) {
+                subscription.setEndDate(updateRequest.getEndDate());
+            }
+            if (updateRequest.getSubscriptionLevelId() != null) {
+                Optional<SubscriptionLevel> levelOptional = subscriptionLevelRepository
+                        .findById(updateRequest.getSubscriptionLevelId());
+                levelOptional.ifPresent(subscription::setSubscriptionLevel);
+            }
+
+            return subscriptionRepository.save(subscription);
+        }
+        return null;
+    }
+
+    private void validateSubscription(Subscription subscription) {
+        if (subscription.getUser() == null || subscription.getUser().getId() == null
+                || !userRepository.existsById(subscription.getUser().getId())) {
+            throw new IllegalArgumentException("L'utilisateur spécifié n'existe pas.");
+        }
+        if (subscription.getStartDate() == null || subscription.getStartDate().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("La date de début doit être aujourd'hui ou dans le futur.");
+        }
+        if (subscription.getEndDate() != null && subscription.getStartDate() != null
+                && subscription.getEndDate().isBefore(subscription.getStartDate())) {
+            throw new IllegalArgumentException("La date de fin doit être postérieure à la date de début.");
+        }
+        if (subscription.getSubscriptionLevel() == null || subscription.getSubscriptionLevel().getLevel() == null) {
+            throw new IllegalArgumentException("Le type d'abonnement ne peut pas être vide.");
+        }
+        if (subscription.getStatus() == null) {
+            throw new IllegalArgumentException("Le statut de l'abonnement doit être spécifié.");
+        }
+    }
+
+    public List<Subscription> searchSubscriptions(Long userId, String status, String subscriptionType, int page,
+            int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Specification<Subscription> spec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (userId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("user").get("id"), userId));
+            }
+            if (status != null && !status.isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("status"), status));
+            }
+            if (subscriptionType != null && !subscriptionType.isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("subscriptionType"), subscriptionType));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<Subscription> subscriptionPage = subscriptionRepository.findAll(spec, pageable);
+        return subscriptionPage.getContent();
+    }
+
+    public List<Subscription> getAllSubscriptionsByFilters(Long userId, String status, String subscriptionType,
+            int page, int size) {
+        return searchSubscriptions(userId, status, subscriptionType, page, size);
     }
 }

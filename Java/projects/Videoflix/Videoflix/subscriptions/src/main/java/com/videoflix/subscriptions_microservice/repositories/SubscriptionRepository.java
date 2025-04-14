@@ -1,14 +1,29 @@
 package com.videoflix.subscriptions_microservice.repositories;
 
 import com.videoflix.subscriptions_microservice.entities.Subscription;
+import com.videoflix.subscriptions_microservice.entities.Subscription.SubscriptionStatus;
 import com.videoflix.subscriptions_microservice.entities.User;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
+public interface SubscriptionRepository
+        extends JpaRepository<Subscription, Long>, JpaSpecificationExecutor<Subscription> {
     List<Subscription> findByUser(User user);
+
+    long countByStatus(SubscriptionStatus active);
+
+    long countByStartDateBetween(LocalDateTime startDate, LocalDateTime endDate);
+
+    List<Subscription> findByStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(SubscriptionStatus active,
+            LocalDateTime endDateTime, LocalDateTime startDateTime);
+
+    long countByStatusAndEndDateGreaterThanEqual(SubscriptionStatus active, LocalDateTime endDateTime);
+
+    long countByStatusAndStartDateLessThan(SubscriptionStatus active, LocalDateTime startDateTime);
 }
