@@ -4,6 +4,7 @@ import com.videoflix.subscriptions_microservice.entities.Subscription;
 import com.videoflix.subscriptions_microservice.entities.Subscription.SubscriptionStatus;
 import com.videoflix.subscriptions_microservice.entities.User;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -13,17 +14,30 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SubscriptionRepository
-        extends JpaRepository<Subscription, Long>, JpaSpecificationExecutor<Subscription> {
-    List<Subscription> findByUser(User user);
+                extends JpaRepository<Subscription, Long>, JpaSpecificationExecutor<Subscription> {
+        List<Subscription> findByUser(User user);
 
-    long countByStatus(SubscriptionStatus active);
+        long countByStatus(SubscriptionStatus active);
 
-    long countByStartDateBetween(LocalDateTime startDate, LocalDateTime endDate);
+        long countByStartDateBetween(LocalDateTime startDate, LocalDateTime endDate);
 
-    List<Subscription> findByStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(SubscriptionStatus active,
-            LocalDateTime endDateTime, LocalDateTime startDateTime);
+        List<Subscription> findByStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(SubscriptionStatus active,
+                        LocalDateTime endDateTime, LocalDateTime startDateTime);
 
-    long countByStatusAndEndDateGreaterThanEqual(SubscriptionStatus active, LocalDateTime endDateTime);
+        long countByStatusAndEndDateGreaterThanEqual(SubscriptionStatus active, LocalDateTime endDateTime);
 
-    long countByStatusAndStartDateLessThan(SubscriptionStatus active, LocalDateTime startDateTime);
+        long countByStatusAndStartDateLessThan(SubscriptionStatus active, LocalDateTime startDateTime);
+
+        List<Subscription> findByEndDate(LocalDate today);
+
+        List<Subscription> findByEndDateBeforeAndStatusNot(LocalDate today, SubscriptionStatus expired);
+
+        List<Subscription> findByTrialEndDate(LocalDate today);
+
+        List<Subscription> findByTrialEndDateBeforeAndStatus(LocalDate today, SubscriptionStatus trial);
+
+        List<Subscription> findByStatusAndCancellationDateBefore(SubscriptionStatus cancelled,
+                LocalDate archiveThreshold);
+
+        List<Subscription> findInactiveBefore(LocalDate deletionThreshold);
 }

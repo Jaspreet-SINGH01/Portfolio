@@ -1,39 +1,5 @@
 Tâches liées au cycle de vie des abonnements :
 
-ExpirationTask :
-
-Objectif : Vérifier régulièrement les abonnements dont la date de fin (endDate) est atteinte ou dépassée.
-Actions possibles :
-Changer le statut de l'abonnement à "EXPIRED".
-Envoyer des notifications aux utilisateurs concernant l'expiration de leur abonnement et les options de renouvellement.
-Révoquer l'accès au contenu ou aux fonctionnalités associées à l'abonnement expiré.
-TrialPeriodEndTask :
-
-Objectif : Pour les abonnements avec une période d'essai, cette tâche vérifie quand la période d'essai se termine.
-Actions possibles :
-Envoyer des notifications aux utilisateurs avant la fin de la période d'essai, les informant des prochaines étapes (par exemple, passage à un abonnement payant).
-Si l'utilisateur n'a pas souscrit à un abonnement payant, changer le statut de l'abonnement (par exemple, à "TRIAL_ENDED" ou "INACTIVE").
-PaymentProcessingTask (si vous ne déléguez pas tout) :
-
-Objectif : Si votre microservice est responsable (même partiellement) du traitement des paiements récurrents (au-delà du renouvellement), cette tâche pourrait être nécessaire.
-Actions possibles :
-Tenter de débiter les utilisateurs à la date de facturation.
-Mettre à jour le statut de l'abonnement en fonction du succès ou de l'échec du paiement.
-Gérer les tentatives de paiement en cas d'échec.
-InactiveSubscriptionCleanupTask :
-
-Objectif : Nettoyer périodiquement les abonnements inactifs (par exemple, ceux qui ont été annulés il y a longtemps ou dont la période d'essai est terminée depuis longtemps).
-Actions possibles :
-Archiver les données d'abonnement.
-Supprimer complètement les données d'abonnement après une certaine période, en respectant les politiques de rétention des données.
-Tâches liées à la communication et aux notifications :
-
-WelcomeEmailTask :
-
-Objectif : Envoyer un e-mail de bienvenue aux nouveaux abonnés après leur inscription.
-Actions possibles :
-Personnaliser l'e-mail avec les informations de l'abonnement.
-Fournir des liens vers le contenu ou les instructions d'utilisation.
 SubscriptionUpdateNotificationTask :
 
 Objectif : Envoyer des notifications aux utilisateurs lors de changements importants dans leur abonnement (par exemple, changement de niveau, mise à jour des informations de paiement, etc.).

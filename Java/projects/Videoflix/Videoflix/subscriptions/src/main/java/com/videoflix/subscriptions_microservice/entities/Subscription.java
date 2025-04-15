@@ -103,9 +103,12 @@ public class Subscription {
 
     public enum SubscriptionStatus {
         ACTIVE, // Abonnement actif et en cours
+        ARCHIVED, // Abonnement archivé
         CANCELLED, // Abonnement annulé mais encore valide jusqu'à sa date de fin
         EXPIRED, // Abonnement expiré
         PENDING, // Paiement en attente ou en cours de traitement
-        PAYMENT_FAILED // Paiement échoué
+        PAYMENT_FAILED, // Paiement échoué
+        TRIAL, // Période d'essai
+        TRIAL_ENDED // Fin de la période d'essai
     }
 }
