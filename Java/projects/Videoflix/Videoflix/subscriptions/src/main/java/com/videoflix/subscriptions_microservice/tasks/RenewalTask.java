@@ -24,7 +24,8 @@ public class RenewalTask {
         this.stripePaymentService = stripePaymentService;
     }
 
-    @Scheduled(cron = "0 0 0 * * *") // Exécute tous les jours à minuit
+    // Planification de l'exécution de cette tâche tous les jours à minuit
+    @Scheduled(cron = "0 0 0 * * *")
     public void checkAndRenewSubscriptions() {
         logger.info("Début de la tâche de renouvellement des abonnements.");
         List<Subscription> subscriptions = subscriptionService.getAllSubscriptions(0, Integer.MAX_VALUE);

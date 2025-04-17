@@ -34,7 +34,7 @@ public class SubscriptionController {
     @GetMapping
     public ResponseEntity<List<Subscription>> getAllSubscriptions() {
         // Récupère tous les abonnements
-        List<Subscription> subscriptions = subscriptionService.getAllSubscriptions();
+        List<Subscription> subscriptions = subscriptionService.getAllSubscriptions(0, 0);
         return ResponseEntity.ok(subscriptions);
     }
 

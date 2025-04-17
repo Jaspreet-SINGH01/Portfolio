@@ -7,7 +7,6 @@ import com.videoflix.subscriptions_microservice.services.NotificationService;
 import com.videoflix.subscriptions_microservice.events.NewSubscriptionCreatedEvent;
 import com.videoflix.subscriptions_microservice.repositories.FailedEmailRepository;
 import com.videoflix.subscriptions_microservice.entities.FailedEmail;
-import com.videoflix.subscriptions_microservice.exceptions.WelcomeEmailException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,14 +50,9 @@ public class WelcomeEmailTask {
             notificationService.sendWelcomeEmail(user, subscription);
             logger.info("E-mail de bienvenue envoyé avec succès à l'utilisateur {}", user.getId());
         } catch (Exception e) {
-            logger.error("Erreur lors de l'envoi de l'e-mail de bienvenue à l'utilisateur {} (tentative {}/{}) : {}",
-                    user.getId(),
-                    1,
-                    MAX_RETRIES,
-                    e.getMessage(),
-                    e);
-            throw new WelcomeEmailException("Échec de l'envoi de l'e-mail de bienvenue à l'utilisateur " + user.getId(),
-                    e);
+            // Loguer l'exception avec son contexte complet
+            logger.error("Échec de l'envoi de l'e-mail de bienvenue à l'utilisateur {} (tentative {}/{})",
+                    user.getId(), 1, MAX_RETRIES, e);
         }
     }
 

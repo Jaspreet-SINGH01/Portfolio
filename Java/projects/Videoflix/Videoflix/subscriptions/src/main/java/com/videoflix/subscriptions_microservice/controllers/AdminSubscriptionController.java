@@ -36,7 +36,7 @@ public class AdminSubscriptionController {
     public ResponseEntity<List<Subscription>> listAllSubscriptions(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
-        List<Subscription> subscriptions = subscriptionService.getAllSubscriptions();
+        List<Subscription> subscriptions = subscriptionService.getAllSubscriptions(page, size);
         return new ResponseEntity<>(subscriptions, HttpStatus.OK);
     }
 

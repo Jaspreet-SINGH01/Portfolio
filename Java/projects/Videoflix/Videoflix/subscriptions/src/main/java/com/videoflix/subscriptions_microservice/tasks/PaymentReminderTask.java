@@ -30,7 +30,8 @@ public class PaymentReminderTask {
         this.notificationService = notificationService;
     }
 
-    @Scheduled(cron = "0 0 10 * * *") // Runs every day at 10:00 AM
+    // Planification de l'exécution de cette tâche tous les jours à 10h00 du matin
+    @Scheduled(cron = "0 0 10 * * *")
     public void sendPaymentReminders() {
         LocalDate reminderDate = LocalDate.now().plus(daysBeforeReminder, ChronoUnit.DAYS);
         List<Subscription> subscriptionsDueForReminder = subscriptionRepository.findByNextBillingDate(reminderDate);

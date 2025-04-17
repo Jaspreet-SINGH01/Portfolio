@@ -20,12 +20,14 @@ public class SubscriptionMetricsAggregationTask {
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionMetricsService metricsService;
 
-    public SubscriptionMetricsAggregationTask(SubscriptionRepository subscriptionRepository, SubscriptionMetricsService metricsService) {
+    public SubscriptionMetricsAggregationTask(SubscriptionRepository subscriptionRepository,
+            SubscriptionMetricsService metricsService) {
         this.subscriptionRepository = subscriptionRepository;
         this.metricsService = metricsService;
     }
 
-    @Scheduled(cron = "0 0 3 * * *") // Runs every day at 3:00 AM
+    // Planification de l'exécution de cette tâche tous les jours à 3h00 du matin
+    @Scheduled(cron = "0 0 3 * * *")
     public void aggregateDailySubscriptionMetrics() {
         LocalDate today = LocalDate.now();
         LocalDate yesterday = today.minusDays(1);
@@ -35,39 +37,50 @@ public class SubscriptionMetricsAggregationTask {
         logger.info("Début de l'agrégation des métriques d'abonnement pour le {}...", yesterday);
 
         try {
-            // 1. Nombre de nouveaux abonnements hier
-            long newSubscriptions = subscriptionRepository.countByCreationTimestampBetween(startOfYesterday, endOfYesterday);
+            // Nombre de nouveaux abonnements hier
+            long newSubscriptions = subscriptionRepository.countByCreationTimestampBetween(startOfYesterday,
+                    endOfYesterday);
             metricsService.recordDailyMetric("new_subscriptions", yesterday, newSubscriptions);
             logger.info("Nombre de nouveaux abonnements pour le {} : {}", yesterday, newSubscriptions);
 
-            // 2. Nombre d'annulations hier
-            long cancellations = subscriptionRepository.countByStatusAndCancellationDateBetween(Subscription.SubscriptionStatus.CANCELLED, startOfYesterday.toLocalDate(), endOfYesterday.toLocalDate());
+            // Nombre d'annulations hier
+            long cancellations = subscriptionRepository.countByStatusAndCancellationDateBetween(
+                    Subscription.SubscriptionStatus.CANCELLED, startOfYesterday.toLocalDate(),
+                    endOfYesterday.toLocalDate());
             metricsService.recordDailyMetric("cancelled_subscriptions", yesterday, cancellations);
             logger.info("Nombre d'annulations pour le {} : {}", yesterday, cancellations);
 
-            // 3. Revenus générés hier (calculer en fonction du prix des abonnements actifs)
-            // Attention : La logique exacte dépend de la structure de votre modèle et de la gestion des paiements.
-            List<Subscription> activeSubscriptionsYesterday = subscriptionRepository.findByStatusAndLastPaymentDateBetween(Subscription.SubscriptionStatus.ACTIVE, startOfYesterday.toLocalDate().minusDays(31), endOfYesterday.toLocalDate()); // Ajuster la période si nécessaire
+            // Revenus générés hier
+            List<Subscription> activeSubscriptionsYesterday = subscriptionRepository
+                    .findByStatusAndLastPaymentDateBetween(Subscription.SubscriptionStatus.ACTIVE,
+                            startOfYesterday.toLocalDate().minusDays(31), endOfYesterday.toLocalDate()); // Ajuster la
+                                                                                                         // période si
+                                                                                                         // nécessaire
             double dailyRevenue = activeSubscriptionsYesterday.stream()
-                    .filter(sub -> sub.getBillingAmount() != null)
-                    .mapToDouble(Subscription::getBillingAmount)
+                    .filter(sub -> sub.getPriceId() != null)
+                    .mapToDouble(sub -> {
+                        try {
+                            return Double.parseDouble(sub.getPriceId());
+                        } catch (NumberFormatException e) {
+                            logger.warn("Prix invalide pour l'abonnement {}: {}", sub.getId(), sub.getPriceId());
+                            return 0.0;
+                        }
+                    })
                     .sum();
             metricsService.recordDailyMetric("daily_revenue", yesterday, dailyRevenue);
             logger.info("Revenus générés pour le {} : {}", yesterday, dailyRevenue);
 
-            // 4. Taux d'annulation (peut être calculé sur une période plus longue)
-            // Exemple : Taux d'annulation mensuel = (Nombre d'annulations ce mois-ci / Nombre d'abonnements actifs au début du mois) * 100
-            // Vous pourriez avoir une tâche séparée pour les métriques mensuelles ou calculer cela ici sur une base quotidienne.
-            // Pour une agrégation quotidienne simple, vous pourriez enregistrer le nombre d'abonnements actifs à la fin de la journée.
-            long activeSubscriptionsEndYesterday = subscriptionRepository.countByStatus(Subscription.SubscriptionStatus.ACTIVE);
+            // Taux d'annulation
+            long activeSubscriptionsEndYesterday = subscriptionRepository
+                    .countByStatus(Subscription.SubscriptionStatus.ACTIVE);
             metricsService.recordDailyMetric("active_subscriptions_end", yesterday, activeSubscriptionsEndYesterday);
             logger.info("Nombre d'abonnements actifs à la fin du {} : {}", yesterday, activeSubscriptionsEndYesterday);
 
             logger.info("Agrégation des métriques d'abonnement pour le {} terminée.", yesterday);
 
         } catch (Exception e) {
-            logger.error("Erreur lors de l'agrégation des métriques d'abonnement pour le {} : {}", yesterday, e.getMessage(), e);
-            // Gérer l'erreur (log, potentiellement alerter)
+            logger.error("Erreur lors de l'agrégation des métriques d'abonnement pour le {} : {}", yesterday,
+                    e.getMessage(), e);
         }
     }
 }

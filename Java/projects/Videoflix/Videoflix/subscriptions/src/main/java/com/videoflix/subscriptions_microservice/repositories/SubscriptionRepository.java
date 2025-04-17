@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
@@ -37,7 +38,22 @@ public interface SubscriptionRepository
         List<Subscription> findByTrialEndDateBeforeAndStatus(LocalDate today, SubscriptionStatus trial);
 
         List<Subscription> findByStatusAndCancellationDateBefore(SubscriptionStatus cancelled,
-                LocalDate archiveThreshold);
+                        LocalDate archiveThreshold);
 
         List<Subscription> findInactiveBefore(LocalDate deletionThreshold);
+
+        long countByCreationTimestampBetween(LocalDateTime startOfYesterday, LocalDateTime endOfYesterday);
+
+        long countByStatusAndCancellationDateBetween(SubscriptionStatus cancelled, LocalDate localDate,
+                        LocalDate localDate2);
+
+        List<Subscription> findByStatusAndLastPaymentDateBetween(SubscriptionStatus active, LocalDate minusDays,
+                        LocalDate localDate);
+
+        List<Subscription> findSubscriptionsUpdatedSince(LocalDateTime lastSyncTimestamp, int i, int batchSize);
+
+        List<Subscription> findByStatusAndLastActivityBefore(Subscription.SubscriptionStatus status,
+                        LocalDateTime lastActivityBefore, Pageable pageable);
+
+        List<Subscription> findByNextBillingDate(LocalDate reminderDate);
 }

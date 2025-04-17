@@ -106,9 +106,36 @@ public class Subscription {
         ARCHIVED, // Abonnement archivé
         CANCELLED, // Abonnement annulé mais encore valide jusqu'à sa date de fin
         EXPIRED, // Abonnement expiré
+        INACTIVE, // Abonnement inactif
         PENDING, // Paiement en attente ou en cours de traitement
         PAYMENT_FAILED, // Paiement échoué
         TRIAL, // Période d'essai
         TRIAL_ENDED // Fin de la période d'essai
+    }
+
+    /**
+     * Retourne la date du prochain paiement
+     * 
+     * @return La date du prochain paiement ou null si l'abonnement n'est pas actif
+     */
+    public LocalDateTime getNextBillingDate() {
+        // Si l'abonnement n'est pas actif ou si le renouvellement automatique est
+        // désactivé
+        if (status != SubscriptionStatus.ACTIVE && status != SubscriptionStatus.TRIAL || !autoRenew) {
+            return null;
+        }
+
+        // Utiliser la date de prochain renouvellement si elle est déjà définie
+        if (nextRenewalDate != null) {
+            return nextRenewalDate;
+        }
+
+        // Si l'abonnement est en période d'essai, retourner la date de fin d'essai
+        if (status == SubscriptionStatus.TRIAL && trialEndDate != null) {
+            return trialEndDate;
+        }
+
+        // Par défaut, retourner null
+        return null;
     }
 }

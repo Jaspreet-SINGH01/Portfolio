@@ -2,7 +2,7 @@ package com.videoflix.subscriptions_microservice.tasks;
 
 import com.videoflix.subscriptions_microservice.entities.Subscription;
 import com.videoflix.subscriptions_microservice.repositories.SubscriptionRepository;
-import com.videoflix.subscriptions_microservice.services.DataSynchronizationService; // Service pour la synchronisation des données
+import com.videoflix.subscriptions_microservice.services.DataSynchronizationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,12 +26,14 @@ public class DataSynchronizationTask {
     @Value("${data.synchronization.batch-size:100}")
     private int batchSize;
 
-    public DataSynchronizationTask(SubscriptionRepository subscriptionRepository, DataSynchronizationService dataSynchronizationService) {
+    public DataSynchronizationTask(SubscriptionRepository subscriptionRepository,
+            DataSynchronizationService dataSynchronizationService) {
         this.subscriptionRepository = subscriptionRepository;
         this.dataSynchronizationService = dataSynchronizationService;
     }
 
-    @Scheduled(cron = "${data.synchronization.cron:0 0 4 * * *}") // Runs every day at 4:00 AM by default
+    // Planification de l'exécution de cette tâche tous les jours à 4h00 du matin
+    @Scheduled(cron = "${data.synchronization.cron:0 0 4 * * *}")
     public void synchronizeSubscriptionData() {
         if (!synchronizationEnabled) {
             logger.info("La synchronisation des données d'abonnement est désactivée.");
@@ -46,10 +48,11 @@ public class DataSynchronizationTask {
 
         try {
             do {
-                subscriptionsToSync = subscriptionRepository.findSubscriptionsUpdatedSince(lastSyncTimestamp, page * batchSize, batchSize);
+                subscriptionsToSync = subscriptionRepository.findSubscriptionsUpdatedSince(lastSyncTimestamp,
+                        page * batchSize, batchSize);
                 if (!subscriptionsToSync.isEmpty()) {
                     logger.info("Synchronisation du lot {} de {} abonnements (mis à jour depuis {}).",
-                                page + 1, subscriptionsToSync.size(), lastSyncTimestamp);
+                            page + 1, subscriptionsToSync.size(), lastSyncTimestamp);
                     dataSynchronizationService.synchronizeSubscriptions(subscriptionsToSync);
                     page++;
                 }

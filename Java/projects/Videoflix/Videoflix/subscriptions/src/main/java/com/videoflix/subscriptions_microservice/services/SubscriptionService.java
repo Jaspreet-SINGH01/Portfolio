@@ -5,6 +5,7 @@ import com.videoflix.subscriptions_microservice.entities.Promotion;
 import com.videoflix.subscriptions_microservice.entities.Subscription;
 import com.videoflix.subscriptions_microservice.entities.SubscriptionLevel;
 import com.videoflix.subscriptions_microservice.entities.User;
+import com.videoflix.subscriptions_microservice.integration.SubscriptionLevelChangedEventPublisher;
 import com.videoflix.subscriptions_microservice.repositories.PromotionRepository;
 import com.videoflix.subscriptions_microservice.repositories.SubscriptionLevelRepository;
 import com.videoflix.subscriptions_microservice.repositories.SubscriptionRepository;
@@ -41,17 +42,20 @@ public class SubscriptionService {
     private final PromotionRepository promotionRepository;
     private final UserRepository userRepository;
     private final EntityManager entityManager;
+    private SubscriptionLevelChangedEventPublisher levelChangedEventPublisher;
 
     public SubscriptionService(SubscriptionRepository subscriptionRepository,
             SubscriptionLevelRepository subscriptionLevelRepository,
             PromotionRepository promotionRepository,
             UserRepository userRepository,
-            EntityManager entityManager) {
+            EntityManager entityManager,
+            SubscriptionLevelChangedEventPublisher levelChangedEventPublisher) {
         this.subscriptionRepository = subscriptionRepository;
         this.subscriptionLevelRepository = subscriptionLevelRepository;
         this.promotionRepository = promotionRepository;
         this.userRepository = userRepository;
         this.entityManager = entityManager;
+        this.levelChangedEventPublisher = levelChangedEventPublisher;
     }
 
     // Méthodes pour gérer les abonnements
@@ -388,5 +392,15 @@ public class SubscriptionService {
     public List<Subscription> getAllSubscriptionsByFilters(Long userId, String status, String subscriptionType,
             int page, int size) {
         return searchSubscriptions(userId, status, subscriptionType, page, size);
+    }
+
+    public void changeSubscriptionLevel(Long subscriptionId, String newLevel) {
+        Subscription subscription = subscriptionRepository.findById(subscriptionId)
+                .orElseThrow(() -> new RuntimeException("Subscription not found"));
+        SubscriptionLevel oldLevel = subscription.getSubscriptionLevel();
+        SubscriptionLevel newSubscriptionLevel = SubscriptionLevel.fromString(newLevel);
+        subscription.setSubscriptionLevel(newSubscriptionLevel);
+        subscriptionRepository.save(subscription);
+        levelChangedEventPublisher.publishSubscriptionLevelChangedEvent(subscription, oldLevel.getLevel());
     }
 }

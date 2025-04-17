@@ -219,15 +219,19 @@ public class NotificationService {
             message.setFrom(notificationSender);
             message.setTo(user.getEmail());
             message.setSubject("Bienvenue chez Videoflix !");
-            message.setText(String.format(
-                    "Cher %s,\n\nBienvenue chez Videoflix ! Vous avez souscrit à l'abonnement %s.\n" +
-                            "Profitez de notre vaste bibliothèque de contenu !\n\n" +
-                            "Voici quelques liens utiles :\n" +
-                            "- [Lien vers votre compte]\n" +
-                            "- [Lien vers notre catalogue]\n" +
-                            "- [Lien vers la FAQ ou l'aide]\n\n" +
-                            "Merci de nous rejoindre,\nL'équipe Videoflix",
-                    user.getFirstname(), subscription.getSubscriptionLevel()));
+            message.setText("""
+                    Cher %s,
+
+                    Bienvenue chez Videoflix ! Vous avez souscrit à l'abonnement %s.
+                    Profitez de notre vaste bibliothèque de contenu !
+
+                    Voici quelques liens utiles :
+                    - [Lien vers votre compte]
+                    - [Lien vers notre catalogue]
+                    - [Lien vers la FAQ ou l'aide]
+
+                    Merci de nous rejoindre,
+                    L'équipe Videoflix""".formatted(user.getFirstname(), subscription.getSubscriptionLevel()));
 
             try {
                 mailSender.send(message);
@@ -241,4 +245,36 @@ public class NotificationService {
                     user.getId());
         }
     }
+
+    public void sendPaymentReminderNotification(User user, Subscription subscription, int daysBefore) {
+        if (user.getEmail() != null) {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(notificationSender);
+            message.setTo(user.getEmail());
+            message.setSubject("Rappel de paiement Videoflix à venir");
+            message.setText(String.format("Cher %s,\n\nCeci est un rappel amical concernant votre abonnement %s.\n" +
+                    "Votre prochaine facturation aura lieu le %s (dans %d jours).\n\n" +
+                    "Veuillez vous assurer que vos informations de paiement sont à jour pour éviter toute interruption de service.\n\n"
+                    +
+                    "Si vous avez des questions, n'hésitez pas à contacter notre support.\n\n" +
+                    "Merci,\nL'équipe Videoflix",
+                    user.getFirstname(), subscription.getSubscriptionLevel(), subscription.getNextBillingDate(),
+                    daysBefore));
+
+            try {
+                mailSender.send(message);
+                logger.info("Rappel de paiement envoyé à l'utilisateur {} (abonnement {}), facturation prévue le {}.",
+                        user.getId(), subscription.getId(), subscription.getNextBillingDate());
+            } catch (Exception e) {
+                logger.error("Erreur lors de l'envoi du rappel de paiement à l'utilisateur {} (abonnement {}) : {}",
+                        user.getId(), subscription.getId(), e);
+                // Gérer l'erreur (log, potentiellement enregistrer l'échec pour une révision)
+            }
+        } else {
+            logger.warn(
+                    "Impossible d'envoyer le rappel de paiement à l'utilisateur {} car l'adresse e-mail est manquante.",
+                    user.getId());
+        }
+    }
+
 }

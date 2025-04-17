@@ -4,7 +4,6 @@ import com.videoflix.subscriptions_microservice.entities.Permission;
 import com.videoflix.subscriptions_microservice.entities.Role;
 import com.videoflix.subscriptions_microservice.repositories.PermissionRepository;
 import com.videoflix.subscriptions_microservice.repositories.RoleRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -14,11 +13,13 @@ import java.util.List;
 @Component
 public class RolePermissionInitializer implements CommandLineRunner {
 
-    @Autowired
-    private RoleRepository roleRepository;
+    private final RoleRepository roleRepository;
+    private final PermissionRepository permissionRepository;
 
-    @Autowired
-    private PermissionRepository permissionRepository;
+    public RolePermissionInitializer(RoleRepository roleRepository, PermissionRepository permissionRepository) {
+        this.roleRepository = roleRepository;
+        this.permissionRepository = permissionRepository;
+    }
 
     @Override
     public void run(String... args) throws Exception {
@@ -33,10 +34,15 @@ public class RolePermissionInitializer implements CommandLineRunner {
         Permission accessStats = createPermission("Accéder aux statistiques");
 
         // Créer les rôles
+        @SuppressWarnings("unused")
         Role basicUser = createRole("Utilisateur Basic", Arrays.asList(freeContent));
+        @SuppressWarnings("unused")
         Role premiumUser = createRole("Abonné Premium", Arrays.asList(premiumContent, downloadVideos));
+        @SuppressWarnings("unused")
         Role ultraUser = createRole("Abonné Ultra", Arrays.asList(premiumContent, downloadVideos, exclusiveContent));
-        Role admin = createRole("Administrateur", Arrays.asList(manageUsers, manageSubscriptions, manageCatalog, accessStats));
+        @SuppressWarnings("unused")
+        Role admin = createRole("Administrateur",
+                Arrays.asList(manageUsers, manageSubscriptions, manageCatalog, accessStats));
     }
 
     private Permission createPermission(String name) {

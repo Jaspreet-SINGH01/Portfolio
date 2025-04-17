@@ -32,6 +32,7 @@ public class InactiveSubscriptionCleanupTask {
         this.subscriptionRepository = subscriptionRepository;
     }
 
+    // Planification de l'exécution de cette tâche tous les jours à 5h00 du matin
     @Scheduled(cron = "0 0 5 * * *")
     @Transactional
     public void cleanupInactiveSubscriptions() {

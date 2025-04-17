@@ -25,6 +25,7 @@ public class ExpirationTask {
         this.notificationService = notificationService;
     }
 
+    // Planification de l'exécution de cette tâche tous les jours à 3h00 du matin
     @Scheduled(cron = "0 0 3 * * *")
     @Transactional
     public void processExpiredSubscriptions() {

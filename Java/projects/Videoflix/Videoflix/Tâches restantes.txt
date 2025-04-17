@@ -1,16 +1,12 @@
-Corriger code tasks
+Corriger code SubscriptionLevelChangedEventPublisher
+Liés aux Abonnements :
 
-
-Tâches liées à l'intégration avec d'autres services :
-
-Implémentation de ces tâches :
-
-Ces tâches peuvent être implémentées de différentes manières dans un environnement Spring Boot :
-
-@Scheduled annotation : Pour les tâches qui doivent s'exécuter à des intervalles réguliers (par exemple, vérification des expirations, tentatives de paiement).
-Asynchronous Tasks (@Async) : Pour les tâches qui ne nécessitent pas de réponse immédiate et peuvent être exécutées en arrière-plan (par exemple, envoi d'e-mails).
-Message Queues (RabbitMQ, Kafka) : Pour découpler les tâches et les rendre plus résilientes. Un événement (par exemple, un nouvel abonnement créé) peut être publié sur une queue, et un consommateur (la tâche d'envoi d'e-mail de bienvenue) le traite.
-Batch Processing (Spring Batch) : Pour des tâches plus complexes qui impliquent le traitement de grandes quantités de données (par exemple, nettoyage des abonnements inactifs).
+SubscriptionLevelChangedEventPublisher: Pour notifier les autres systèmes lorsqu'un utilisateur change de niveau d'abonnement. Les systèmes d'analytics, de personnalisation de contenu ou de facturation pourraient être intéressés.
+SubscriptionCancelledEventPublisher: Pour notifier les autres systèmes lorsqu'un abonnement est annulé (par l'utilisateur ou par le système). Les systèmes d'analytics, de fidélisation client ou de gestion des accès pourraient en avoir besoin.
+SubscriptionRenewedEventPublisher: Pour notifier les autres systèmes lorsqu'un abonnement est renouvelé avec succès. Les systèmes d'analytics, de facturation ou de gestion des revenus pourraient être intéressés.
+PaymentMethodUpdatedEventPublisher: Pour notifier les autres systèmes lorsque les informations de paiement d'un utilisateur sont mises à jour. Les systèmes de facturation ou de gestion des risques pourraient en avoir besoin.
+PaymentFailedEventPublisher: Pour notifier les autres systèmes lorsqu'un paiement récurrent échoue. Les systèmes de relance de paiement, de notification client ou de gestion des risques pourraient être intéressés.
+SubscriptionReactivatedEventPublisher: Pour notifier les autres systèmes lorsqu'un abonnement précédemment annulé est réactivé. Les systèmes de gestion des accès ou de facturation pourraient en avoir besoin.
 
 
 
