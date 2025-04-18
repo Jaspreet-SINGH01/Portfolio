@@ -44,11 +44,11 @@ public class AdminSubscriptionController {
     public ResponseEntity<List<Subscription>> searchSubscriptions(
             @RequestParam(value = "userId", required = false) Long userId,
             @RequestParam(value = "status", required = false) String status,
-            @RequestParam(value = "subscriptionType", required = false) String subscriptionType,
+            @RequestParam(value = "subscriptionLevel", required = false) String subscriptionLevel,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
         List<Subscription> subscriptions = subscriptionService.getAllSubscriptionsByFilters(userId, status,
-                subscriptionType, page, size);
+                subscriptionLevel, page, size);
         return new ResponseEntity<>(subscriptions, HttpStatus.OK);
     }
 

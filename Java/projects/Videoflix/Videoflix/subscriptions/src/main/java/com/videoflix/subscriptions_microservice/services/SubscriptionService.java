@@ -240,7 +240,7 @@ public class SubscriptionService {
     }
 
     @Transactional
-    public void handlePaymentFailure(Long userId, String userEmail, String subscriptionType, String pushToken) {
+    public void handlePaymentFailure(Long userId, String userEmail, String subscriptionLevel, String pushToken) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MESSAGE + userId));
         List<Subscription> userSubscriptions = subscriptionRepository.findByUser(user);
@@ -254,16 +254,16 @@ public class SubscriptionService {
             subscriptionToUpdate.setStatus(Subscription.SubscriptionStatus.PAYMENT_FAILED);
             subscriptionRepository.save(subscriptionToUpdate);
             EmailService emailService = new EmailService(null);
-            emailService.sendPaymentFailedNotification(userEmail, subscriptionType);
+            emailService.sendPaymentFailedNotification(userEmail, subscriptionLevel);
             if (pushToken != null && !pushToken.isEmpty()) {
                 PushNotificationService pushNotificationService = new PushNotificationService(null);
-                pushNotificationService.sendPaymentFailedPushNotification(pushToken, subscriptionType);
+                pushNotificationService.sendPaymentFailedPushNotification(pushToken, subscriptionLevel);
             }
         }
     }
 
     @Transactional
-    public void handlePaymentSuccess(Long userId, String userEmail, String subscriptionType, String pushToken) {
+    public void handlePaymentSuccess(Long userId, String userEmail, String subscriptionLevel, String pushToken) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MESSAGE + userId));
         List<Subscription> userSubscriptions = subscriptionRepository.findByUser(user);
@@ -284,10 +284,10 @@ public class SubscriptionService {
             }
             subscriptionRepository.save(subscriptionToUpdate);
             EmailService emailService = new EmailService(null);
-            emailService.sendPaymentRetrySuccessNotification(userEmail, subscriptionType);
+            emailService.sendPaymentRetrySuccessNotification(userEmail, subscriptionLevel);
             if (pushToken != null && !pushToken.isEmpty()) {
                 PushNotificationService pushNotificationService = new PushNotificationService(null);
-                pushNotificationService.sendPaymentRetrySuccessPushNotification(pushToken, subscriptionType);
+                pushNotificationService.sendPaymentRetrySuccessPushNotification(pushToken, subscriptionLevel);
             }
         } else {
             logger.error("No subscription found for user {} on payment success.", userId);
@@ -365,7 +365,7 @@ public class SubscriptionService {
         }
     }
 
-    public List<Subscription> searchSubscriptions(Long userId, String status, String subscriptionType, int page,
+    public List<Subscription> searchSubscriptions(Long userId, String status, String subscriptionLevel, int page,
             int size) {
         Pageable pageable = PageRequest.of(page, size);
 
@@ -378,8 +378,8 @@ public class SubscriptionService {
             if (status != null && !status.isEmpty()) {
                 predicates.add(criteriaBuilder.equal(root.get("status"), status));
             }
-            if (subscriptionType != null && !subscriptionType.isEmpty()) {
-                predicates.add(criteriaBuilder.equal(root.get("subscriptionType"), subscriptionType));
+            if (subscriptionLevel != null && !subscriptionLevel.isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("subscriptionLevel"), subscriptionLevel));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
@@ -389,18 +389,53 @@ public class SubscriptionService {
         return subscriptionPage.getContent();
     }
 
-    public List<Subscription> getAllSubscriptionsByFilters(Long userId, String status, String subscriptionType,
+    public List<Subscription> getAllSubscriptionsByFilters(Long userId, String status, String subscriptionLevel,
             int page, int size) {
-        return searchSubscriptions(userId, status, subscriptionType, page, size);
+        return searchSubscriptions(userId, status, subscriptionLevel, page, size);
     }
 
-    public void changeSubscriptionLevel(Long subscriptionId, String newLevel) {
+    public void changeSubscriptionLevel(Long subscriptionId, String newLevelName) {
         Subscription subscription = subscriptionRepository.findById(subscriptionId)
                 .orElseThrow(() -> new RuntimeException("Subscription not found"));
-        SubscriptionLevel oldLevel = subscription.getSubscriptionLevel();
-        SubscriptionLevel newSubscriptionLevel = SubscriptionLevel.fromString(newLevel);
+        
+        // Obtenir l'ancien niveau avant de le changer
+        SubscriptionLevel oldSubscriptionLevel = subscription.getSubscriptionLevel();
+        String oldLevelString = (oldSubscriptionLevel != null) ? oldSubscriptionLevel.getLevel().name() : null;
+        
+        // Trouver le nouveau niveau d'abonnement
+        SubscriptionLevel newSubscriptionLevel = findSubscriptionLevelByName(newLevelName);
+        
+        // Mettre à jour l'abonnement
         subscription.setSubscriptionLevel(newSubscriptionLevel);
         subscriptionRepository.save(subscription);
-        levelChangedEventPublisher.publishSubscriptionLevelChangedEvent(subscription, oldLevel.getLevel());
+        
+        // Publier l'événement de changement
+        levelChangedEventPublisher.publishSubscriptionLevelChangedEvent(subscription, oldLevelString);
+    }
+    
+    public Subscription findSubscriptionLevelByName(String levelName) {
+        try {
+            // Convertir la chaîne en enum Level
+            SubscriptionLevel.Level levelEnum = SubscriptionLevel.Level.fromString(levelName);
+            
+            // Chercher dans la base de données
+            return subscriptionLevelRepository.findByLevel(levelEnum)
+                .orElseThrow(() -> new IllegalArgumentException("Niveau d'abonnement introuvable : " + levelName));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Niveau d'abonnement invalide : " + levelName);
+        }
+    }
+
+    public Subscription findByLevelName(String levelName) {
+        try {
+            // Convertir la chaîne en enum Level
+            SubscriptionLevel.Level levelEnum = SubscriptionLevel.Level.fromString(levelName);
+            
+            // Chercher dans la base de données
+            return subscriptionLevelRepository.findByLevel(levelEnum)
+                .orElseThrow(() -> new IllegalArgumentException("Niveau d'abonnement introuvable : " + levelName));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Niveau d'abonnement invalide : " + levelName);
+        }
     }
 }

@@ -25,6 +25,20 @@ public class SubscriptionLevel {
     public enum Level {
         BASIC,
         PREMIUM,
-        ULTRA
+        ULTRA;
+
+        public static Level fromString(String text) {
+            for (Level l : Level.values()) {
+                if (l.name().equalsIgnoreCase(text)) {
+                    return l;
+                }
+            }
+            throw new IllegalArgumentException("Niveau d'abonnement inconnu : " + text);
+        }
+    }
+
+    @Override
+    public String toString() {
+        return level != null ? level.name() : null;
     }
 }

@@ -1,4 +1,4 @@
-Corriger code SubscriptionLevelChangedEventPublisher
+Corriger code SubscriptionService
 Liés aux Abonnements :
 
 SubscriptionLevelChangedEventPublisher: Pour notifier les autres systèmes lorsqu'un utilisateur change de niveau d'abonnement. Les systèmes d'analytics, de personnalisation de contenu ou de facturation pourraient être intéressés.

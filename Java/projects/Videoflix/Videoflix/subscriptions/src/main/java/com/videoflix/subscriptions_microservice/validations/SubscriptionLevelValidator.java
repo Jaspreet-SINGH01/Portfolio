@@ -5,7 +5,7 @@ import jakarta.validation.ConstraintValidatorContext;
 import java.util.Arrays;
 import java.util.List;
 
-public class SubscriptionTypeValidator implements ConstraintValidator<ValidSubscriptionLevel, String> {
+public class SubscriptionLevelValidator implements ConstraintValidator<ValidSubscriptionLevel, String> {
 
     private List<String> allowedTypes;
 
