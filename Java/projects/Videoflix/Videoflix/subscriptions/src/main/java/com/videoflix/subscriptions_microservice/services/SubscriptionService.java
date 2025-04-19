@@ -5,6 +5,7 @@ import com.videoflix.subscriptions_microservice.entities.Promotion;
 import com.videoflix.subscriptions_microservice.entities.Subscription;
 import com.videoflix.subscriptions_microservice.entities.SubscriptionLevel;
 import com.videoflix.subscriptions_microservice.entities.User;
+import com.videoflix.subscriptions_microservice.integration.SubscriptionCancelledEventPublisher;
 import com.videoflix.subscriptions_microservice.integration.SubscriptionLevelChangedEventPublisher;
 import com.videoflix.subscriptions_microservice.repositories.PromotionRepository;
 import com.videoflix.subscriptions_microservice.repositories.SubscriptionLevelRepository;
@@ -43,19 +44,22 @@ public class SubscriptionService {
     private final UserRepository userRepository;
     private final EntityManager entityManager;
     private SubscriptionLevelChangedEventPublisher levelChangedEventPublisher;
+    private SubscriptionCancelledEventPublisher subscriptionCancelledEventPublisher;
 
     public SubscriptionService(SubscriptionRepository subscriptionRepository,
             SubscriptionLevelRepository subscriptionLevelRepository,
             PromotionRepository promotionRepository,
             UserRepository userRepository,
             EntityManager entityManager,
-            SubscriptionLevelChangedEventPublisher levelChangedEventPublisher) {
+            SubscriptionLevelChangedEventPublisher levelChangedEventPublisher,
+            SubscriptionCancelledEventPublisher subscriptionCancelledEventPublisher) {
         this.subscriptionRepository = subscriptionRepository;
         this.subscriptionLevelRepository = subscriptionLevelRepository;
         this.promotionRepository = promotionRepository;
         this.userRepository = userRepository;
         this.entityManager = entityManager;
         this.levelChangedEventPublisher = levelChangedEventPublisher;
+        this.subscriptionCancelledEventPublisher = subscriptionCancelledEventPublisher;
     }
 
     // Méthodes pour gérer les abonnements
@@ -395,47 +399,86 @@ public class SubscriptionService {
     }
 
     public void changeSubscriptionLevel(Long subscriptionId, String newLevelName) {
+        // Récupérer l'abonnement existant
         Subscription subscription = subscriptionRepository.findById(subscriptionId)
                 .orElseThrow(() -> new RuntimeException("Subscription not found"));
-        
-        // Obtenir l'ancien niveau avant de le changer
+
         SubscriptionLevel oldSubscriptionLevel = subscription.getSubscriptionLevel();
-        String oldLevelString = (oldSubscriptionLevel != null) ? oldSubscriptionLevel.getLevel().name() : null;
-        
+        String oldLevelString = (oldSubscriptionLevel != null)
+                ? oldSubscriptionLevel.getLevel().name()
+                : null;
+
         // Trouver le nouveau niveau d'abonnement
         SubscriptionLevel newSubscriptionLevel = findSubscriptionLevelByName(newLevelName);
-        
-        // Mettre à jour l'abonnement
+        String newLevelString = newSubscriptionLevel.getLevel().name();
+
+        // Vérifier si le niveau est déjà le même → pas de mise à jour inutile
+        if (oldLevelString != null && oldLevelString.equalsIgnoreCase(newLevelString)) {
+            logger.info("Aucun changement de niveau pour l'abonnement ID {} (niveau déjà '{}')",
+                    subscriptionId, oldLevelString);
+            return; // rien à faire
+        }
+
+        // Appliquer le changement
         subscription.setSubscriptionLevel(newSubscriptionLevel);
         subscriptionRepository.save(subscription);
-        
-        // Publier l'événement de changement
+
+        // Log du changement
+        logger.info("Changement du niveau d'abonnement pour ID {} : {} → {}",
+                subscriptionId, oldLevelString, newLevelString);
+
+        // Publier l’événement
         levelChangedEventPublisher.publishSubscriptionLevelChangedEvent(subscription, oldLevelString);
     }
-    
-    public Subscription findSubscriptionLevelByName(String levelName) {
+
+    /**
+     * Recherche un niveau d'abonnement en fonction de son nom.
+     *
+     * @param levelName Nom du niveau (ex: "BASIC", "PREMIUM", etc.)
+     * @return L'entité SubscriptionLevel correspondante
+     * @throws IllegalArgumentException si le niveau est invalide ou introuvable
+     */
+    public SubscriptionLevel findSubscriptionLevelByName(String levelName) {
         try {
-            // Convertir la chaîne en enum Level
             SubscriptionLevel.Level levelEnum = SubscriptionLevel.Level.fromString(levelName);
-            
-            // Chercher dans la base de données
             return subscriptionLevelRepository.findByLevel(levelEnum)
-                .orElseThrow(() -> new IllegalArgumentException("Niveau d'abonnement introuvable : " + levelName));
+                    .orElseThrow(() -> new IllegalArgumentException("Niveau d'abonnement introuvable : " + levelName));
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Niveau d'abonnement invalide : " + levelName);
+            throw new IllegalArgumentException("Niveau d'abonnement invalide ou introuvable : " + levelName, e);
         }
     }
 
-    public Subscription findByLevelName(String levelName) {
-        try {
-            // Convertir la chaîne en enum Level
-            SubscriptionLevel.Level levelEnum = SubscriptionLevel.Level.fromString(levelName);
-            
-            // Chercher dans la base de données
-            return subscriptionLevelRepository.findByLevel(levelEnum)
-                .orElseThrow(() -> new IllegalArgumentException("Niveau d'abonnement introuvable : " + levelName));
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Niveau d'abonnement invalide : " + levelName);
-        }
+    public void cancelSubscription(Long subscriptionId, String reason) {
+        Subscription subscription = subscriptionRepository.findById(subscriptionId)
+                .orElseThrow(() -> new RuntimeException("Subscription not found"));
+        subscription.setStatus(Subscription.SubscriptionStatus.CANCELLED); // Mettre à jour le statut
+        subscription.setCancelledAt(java.time.LocalDateTime.now()); // Enregistrer la date d'annulation
+        subscriptionRepository.save(subscription);
+        subscriptionCancelledEventPublisher.publishSubscriptionCancelledEvent(subscription, reason);
+        // ... autres logiques (par exemple, remboursement, désactivation des accès) ...
     }
+
+    public void processSuccessfulRenewal(Long subscriptionId) {
+        Subscription subscription = subscriptionRepository.findById(subscriptionId)
+                .orElseThrow(() -> new RuntimeException("Subscription not found"));
+        // Mettre à jour la date de prochaine facturation et potentiellement d'autres informations
+        subscription.setNextBillingDate(calculateNextBillingDate(subscription));
+        subscriptionRepository.save(subscription);
+        subscriptionRenewedEventPublisher.publishSubscriptionRenewedEvent(subscription);
+        // ... autres logiques (par exemple, mise à jour de la facture) ...
+    }
+    // ... (méthode calculateNextBillingDate)
+
+    public void reactivateSubscription(Long subscriptionId) {
+        Subscription subscription = subscriptionRepository.findById(subscriptionId)
+                .orElseThrow(() -> new RuntimeException("Subscription not found"));
+        subscription.setStatus(Subscription.SubscriptionStatus.ACTIVE); // Mettre à jour le statut
+        // Potentiellement recalculer la prochaine date de facturation
+        subscription.setNextBillingDate(calculateNextBillingDateAfterReactivation(subscription));
+        subscriptionRepository.save(subscription);
+        subscriptionReactivatedEventPublisher.publishSubscriptionReactivatedEvent(subscription);
+        // ... autres logiques (par exemple, réactiver les accès) ...
+    }
+
+    // ... (méthode calculateNextBillingDateAfterReactivation)
 }

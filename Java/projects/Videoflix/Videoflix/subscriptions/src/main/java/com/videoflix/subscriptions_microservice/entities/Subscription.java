@@ -101,6 +101,9 @@ public class Subscription {
     @OneToMany(mappedBy = "subscription", cascade = CascadeType.ALL)
     private List<Payment> payments; // Liste des paiements associés à l'abonnement
 
+    @Column(name = "cancelled_at")
+    private LocalDateTime cancelledAt;
+
     public enum SubscriptionStatus {
         ACTIVE, // Abonnement actif et en cours
         ARCHIVED, // Abonnement archivé

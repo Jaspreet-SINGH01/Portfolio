@@ -2,8 +2,7 @@ package com.videoflix.subscriptions_microservice.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.videoflix.subscriptions_microservice.entities.Subscription;
-import com.videoflix.subscriptions_microservice.entities.SubscriptionLevel.Level;
-
+import com.videoflix.subscriptions_microservice.entities.SubscriptionLevel; // Importez l'entité SubscriptionLevel
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -32,8 +31,21 @@ public class SubscriptionLevelChangedEventPublisher {
         try {
             Map<String, Object> payload = new HashMap<>();
             payload.put("subscriptionId", subscription.getId());
-            payload.put("userId", subscription.getUser().getId()); // Ajouter l'ID de l'utilisateur
-            payload.put("newLevel", subscription.getSubscriptionLevel());
+            if (subscription.getUser() != null) {
+                payload.put("userId", subscription.getUser().getId()); // Ajouter l'ID de l'utilisateur
+            } else {
+                logger.warn("Utilisateur non trouvé pour l'abonnement ID: {}", subscription.getId());
+                payload.put("userId", null);
+            }
+            SubscriptionLevel newLevel = subscription.getSubscriptionLevel();
+            if (newLevel != null) {
+                payload.put("newLevelId", newLevel.getId());
+                payload.put("newLevelName", newLevel.getLevel().name());
+            } else {
+                logger.warn("Nouveau niveau d'abonnement non trouvé pour l'abonnement ID: {}", subscription.getId());
+                payload.put("newLevelId", null);
+                payload.put("newLevelName", null);
+            }
             payload.put("oldLevel", oldLevelString);
             payload.put("changeTimestamp", java.time.LocalDateTime.now().toString()); // Ajouter un horodatage
             String message = objectMapper.writeValueAsString(payload);
