@@ -40,10 +40,10 @@ public class PaymentMethodUpdatedEventPublisher {
             String message = objectMapper.writeValueAsString(payload);
             rabbitTemplate.convertAndSend(PAYMENT_METHOD_UPDATED_EXCHANGE, PAYMENT_METHOD_UPDATED_ROUTING_KEY, message);
             logger.info(
-                    "Événement PaymentMethodUpdatedEvent publié sur l'échange {} avec la clé de routage {}, payload: {}",
+                    "Évènement PaymentMethodUpdatedEvent publié sur l'échange {} avec la clé de routage {}, payload: {}",
                     PAYMENT_METHOD_UPDATED_EXCHANGE, PAYMENT_METHOD_UPDATED_ROUTING_KEY, payload);
         } catch (Exception e) {
-            logger.error("Erreur lors de la publication de l'événement PaymentMethodUpdatedEvent : {}",
+            logger.error("Erreur lors de la publication de l'Évènement PaymentMethodUpdatedEvent : {}",
                     e.getMessage(), e);
         }
     }

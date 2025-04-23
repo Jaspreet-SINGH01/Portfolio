@@ -22,6 +22,13 @@ public class SubscriptionLevel {
     @Column(name = "features")
     private String features; // Caractéristiques de l'abonnement (liste de fonctionnalités)
 
+    @Column(name = "billing_frequency", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private BillingFrequency billingFrequency; // Fréquence de facture
+
+    @Column(name = "stripe_price_id")
+    private String stripePriceId;
+
     public enum Level {
         BASIC,
         PREMIUM,
@@ -35,6 +42,12 @@ public class SubscriptionLevel {
             }
             throw new IllegalArgumentException("Niveau d'abonnement inconnu : " + text);
         }
+    }
+
+    public enum BillingFrequency {
+        MONTHLY,
+        QUARTERLY,
+        YEARLY
     }
 
     @Override

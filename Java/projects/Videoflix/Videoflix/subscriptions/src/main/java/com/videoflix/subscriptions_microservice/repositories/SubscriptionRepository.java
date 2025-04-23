@@ -1,5 +1,6 @@
 package com.videoflix.subscriptions_microservice.repositories;
 
+import com.stripe.model.StripeObject;
 import com.videoflix.subscriptions_microservice.entities.Subscription;
 import com.videoflix.subscriptions_microservice.entities.Subscription.SubscriptionStatus;
 import com.videoflix.subscriptions_microservice.entities.User;
@@ -7,6 +8,7 @@ import com.videoflix.subscriptions_microservice.entities.User;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -56,4 +58,6 @@ public interface SubscriptionRepository
                         LocalDateTime lastActivityBefore, Pageable pageable);
 
         List<Subscription> findByNextBillingDate(LocalDate reminderDate);
+
+        Optional<StripeObject> findByStripeSubscriptionId(String stripeSubscriptionId);
 }

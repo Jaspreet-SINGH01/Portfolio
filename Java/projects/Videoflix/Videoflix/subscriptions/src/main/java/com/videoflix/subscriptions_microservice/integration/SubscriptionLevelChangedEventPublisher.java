@@ -55,7 +55,7 @@ public class SubscriptionLevelChangedEventPublisher {
                     "Évènement SubscriptionLevelChangedEvent publié sur l'échange {} avec la clé de routage {}, payload: {}",
                     SUBSCRIPTION_LEVEL_CHANGED_EXCHANGE, SUBSCRIPTION_LEVEL_CHANGED_ROUTING_KEY, payload);
         } catch (Exception e) {
-            logger.error("Erreur lors de la publication de l'événement SubscriptionLevelChangedEvent : {}",
+            logger.error("Erreur lors de la publication de l'Évènement SubscriptionLevelChangedEvent : {}",
                     e.getMessage(), e);
         }
     }

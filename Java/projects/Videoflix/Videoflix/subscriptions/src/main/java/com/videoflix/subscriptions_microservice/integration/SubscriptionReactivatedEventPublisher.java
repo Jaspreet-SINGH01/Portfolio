@@ -49,10 +49,10 @@ public class SubscriptionReactivatedEventPublisher {
             rabbitTemplate.convertAndSend(SUBSCRIPTION_REACTIVATED_EXCHANGE, SUBSCRIPTION_REACTIVATED_ROUTING_KEY,
                     message);
             logger.info(
-                    "Événement SubscriptionReactivatedEvent publié sur l'échange {} avec la clé de routage {}, payload: {}",
+                    "Évènement SubscriptionReactivatedEvent publié sur l'échange {} avec la clé de routage {}, payload: {}",
                     SUBSCRIPTION_REACTIVATED_EXCHANGE, SUBSCRIPTION_REACTIVATED_ROUTING_KEY, payload);
         } catch (Exception e) {
-            logger.error("Erreur lors de la publication de l'événement SubscriptionReactivatedEvent : {}",
+            logger.error("Erreur lors de la publication de l'Évènement SubscriptionReactivatedEvent : {}",
                     e.getMessage(), e);
         }
     }

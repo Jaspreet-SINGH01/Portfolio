@@ -48,10 +48,10 @@ public class SubscriptionRenewedEventPublisher {
             String message = objectMapper.writeValueAsString(payload);
             rabbitTemplate.convertAndSend(SUBSCRIPTION_RENEWED_EXCHANGE, SUBSCRIPTION_RENEWED_ROUTING_KEY, message);
             logger.info(
-                    "Événement SubscriptionRenewedEvent publié sur l'échange {} avec la clé de routage {}, payload: {}",
+                    "Évènement SubscriptionRenewedEvent publié sur l'échange {} avec la clé de routage {}, payload: {}",
                     SUBSCRIPTION_RENEWED_EXCHANGE, SUBSCRIPTION_RENEWED_ROUTING_KEY, payload);
         } catch (Exception e) {
-            logger.error("Erreur lors de la publication de l'événement SubscriptionRenewedEvent : {}",
+            logger.error("Erreur lors de la publication de l'évènement SubscriptionRenewedEvent : {}",
                     e.getMessage(), e);
         }
     }

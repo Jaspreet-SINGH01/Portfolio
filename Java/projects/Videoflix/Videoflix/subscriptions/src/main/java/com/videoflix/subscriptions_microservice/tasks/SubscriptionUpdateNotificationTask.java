@@ -45,10 +45,10 @@ public class SubscriptionUpdateNotificationTask {
     @EventListener
     public void handleSubscriptionLevelChangedEvent(SubscriptionLevelChangedEvent event) {
         Subscription subscription = event.getSubscription();
-        User user = event.getUser(); // L'événement devrait contenir l'utilisateur
+        User user = event.getUser(); // L'Évènement devrait contenir l'utilisateur
 
         logger.info(
-                "Réception de l'événement de changement de niveau d'abonnement pour l'utilisateur {} (abonnement {}).",
+                "Réception de l'Évènement de changement de niveau d'abonnement pour l'utilisateur {} (abonnement {}).",
                 user.getId(), subscription.getId());
         try {
             emailService.sendSubscriptionNotification(user.getEmail(),
@@ -74,10 +74,10 @@ public class SubscriptionUpdateNotificationTask {
     @EventListener
     public void handlePaymentInfoUpdatedEvent(PaymentInfoUpdatedEvent event) {
         Subscription subscription = event.getSubscription();
-        User user = event.getUser(); // L'événement devrait contenir l'utilisateur
+        User user = event.getUser(); // L'Évènement devrait contenir l'utilisateur
 
         logger.info(
-                "Réception de l'événement de mise à jour des informations de paiement pour l'utilisateur {} (abonnement {}).",
+                "Réception de l'Évènement de mise à jour des informations de paiement pour l'utilisateur {} (abonnement {}).",
                 user.getId(), subscription.getId());
 
         try {

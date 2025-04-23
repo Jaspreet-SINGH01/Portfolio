@@ -1,12 +1,17 @@
 package com.videoflix.subscriptions_microservice.services;
 
+import com.stripe.exception.StripeException;
+import com.stripe.model.Refund;
 import com.videoflix.subscriptions_microservice.dtos.AdminUpdateSubscriptionRequest;
 import com.videoflix.subscriptions_microservice.entities.Promotion;
 import com.videoflix.subscriptions_microservice.entities.Subscription;
 import com.videoflix.subscriptions_microservice.entities.SubscriptionLevel;
 import com.videoflix.subscriptions_microservice.entities.User;
+import com.videoflix.subscriptions_microservice.integration.AccessControlEventPublisher;
 import com.videoflix.subscriptions_microservice.integration.SubscriptionCancelledEventPublisher;
 import com.videoflix.subscriptions_microservice.integration.SubscriptionLevelChangedEventPublisher;
+import com.videoflix.subscriptions_microservice.integration.SubscriptionReactivatedEventPublisher;
+import com.videoflix.subscriptions_microservice.integration.SubscriptionRenewedEventPublisher;
 import com.videoflix.subscriptions_microservice.repositories.PromotionRepository;
 import com.videoflix.subscriptions_microservice.repositories.SubscriptionLevelRepository;
 import com.videoflix.subscriptions_microservice.repositories.SubscriptionRepository;
@@ -36,6 +41,7 @@ import java.util.Optional;
 public class SubscriptionService {
 
     private static final String USER_NOT_FOUND_MESSAGE = "User not found with ID : ";
+    private static final String SUBSCRIPTION_NOT_FOUND_MESSAGE = "Subscription not found";
     private static final Logger logger = LoggerFactory.getLogger(SubscriptionService.class);
 
     private final SubscriptionRepository subscriptionRepository;
@@ -45,6 +51,11 @@ public class SubscriptionService {
     private final EntityManager entityManager;
     private SubscriptionLevelChangedEventPublisher levelChangedEventPublisher;
     private SubscriptionCancelledEventPublisher subscriptionCancelledEventPublisher;
+    private final BillingCalculationService billingCalculationService;
+    private final SubscriptionRenewedEventPublisher subscriptionRenewedEventPublisher;
+    private final SubscriptionReactivatedEventPublisher subscriptionReactivatedEventPublisher;
+    private final AccessControlEventPublisher accessControlEventPublisher;
+    private final StripeBillingService stripeBillingService;
 
     public SubscriptionService(SubscriptionRepository subscriptionRepository,
             SubscriptionLevelRepository subscriptionLevelRepository,
@@ -52,7 +63,12 @@ public class SubscriptionService {
             UserRepository userRepository,
             EntityManager entityManager,
             SubscriptionLevelChangedEventPublisher levelChangedEventPublisher,
-            SubscriptionCancelledEventPublisher subscriptionCancelledEventPublisher) {
+            SubscriptionCancelledEventPublisher subscriptionCancelledEventPublisher,
+            BillingCalculationService billingCalculationService,
+            SubscriptionRenewedEventPublisher subscriptionRenewedEventPublisher,
+            SubscriptionReactivatedEventPublisher subscriptionReactivatedEventPublisher,
+            AccessControlEventPublisher accessControlEventPublisher,
+            StripeBillingService stripeBillingService) {
         this.subscriptionRepository = subscriptionRepository;
         this.subscriptionLevelRepository = subscriptionLevelRepository;
         this.promotionRepository = promotionRepository;
@@ -60,6 +76,11 @@ public class SubscriptionService {
         this.entityManager = entityManager;
         this.levelChangedEventPublisher = levelChangedEventPublisher;
         this.subscriptionCancelledEventPublisher = subscriptionCancelledEventPublisher;
+        this.billingCalculationService = billingCalculationService;
+        this.subscriptionRenewedEventPublisher = subscriptionRenewedEventPublisher;
+        this.subscriptionReactivatedEventPublisher = subscriptionReactivatedEventPublisher;
+        this.accessControlEventPublisher = accessControlEventPublisher;
+        this.stripeBillingService = stripeBillingService;
     }
 
     // Méthodes pour gérer les abonnements
@@ -298,17 +319,54 @@ public class SubscriptionService {
         }
     }
 
-    @Transactional
+    
     public Subscription createNewSubscription(Long userId, SubscriptionLevel subscriptionLevel) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MESSAGE + userId));
-        Subscription newSubscription = new Subscription();
-        newSubscription.setUser(user);
-        newSubscription.setStartDate(LocalDateTime.now());
-        newSubscription.setEndDate(LocalDateTime.now().plusMonths(1));
-        newSubscription.setSubscriptionLevel(subscriptionLevel);
-        newSubscription.setStatus(Subscription.SubscriptionStatus.ACTIVE);
-        return subscriptionRepository.save(newSubscription);
+
+        try {
+            // Récupérer l'ID du prix Stripe associé au SubscriptionLevel
+            String stripePriceId = subscriptionLevel.getStripePriceId();
+            if (stripePriceId == null) {
+                throw new IllegalStateException("L'ID de prix Stripe n'est pas configuré pour le niveau d'abonnement : " + subscriptionLevel.getLevel());
+            }
+
+            // Créer l'abonnement sur Stripe
+            StripeSubscription stripeSubscription = stripeBillingService.createSubscription(user.getStripeCustomerId(), stripePriceId);
+
+            String stripeChargeId = null;
+            // Tenter de récupérer l'ID de la charge du premier paiement
+            // Cela dépend de la façon dont Stripe a configuré votre abonnement (paiement immédiat ou non)
+            if (stripeSubscription.getLatestCharge() != null) {
+                stripeChargeId = stripeSubscription.getLatestCharge().getId();
+            } else if (stripeSubscription.getLatestInvoice() != null && stripeSubscription.getLatestInvoice().getPaymentIntentObject() != null && stripeSubscription.getLatestInvoice().getPaymentIntentObject().getLatestCharge() != null) {
+                stripeChargeId = stripeSubscription.getLatestInvoice().getPaymentIntentObject().getLatestCharge().getId();
+            }
+
+            Subscription newSubscription = new Subscription();
+            newSubscription.setUser(user);
+            newSubscription.setStartDate(LocalDateTime.now());
+            // La date de fin sera gérée par Stripe ou calculée en fonction de la fréquence
+            newSubscription.setSubscriptionLevel(subscriptionLevel);
+            newSubscription.setStatus(Subscription.SubscriptionStatus.ACTIVE);
+            newSubscription.setStripeSubscriptionId(stripeSubscription.getId());
+            newSubscription.setStripeChargeId(stripeChargeId); // Enregistrer l'ID de la charge
+            newSubscription.setPrice(subscriptionLevel.getPrice()); // Récupérer le prix du niveau
+            newSubscription.setCurrency(stripeSubscription.getCurrency()); // Récupérer la devise de Stripe
+
+            // Initialiser la prochaine date de facturation (peut être ajustée après le premier paiement)
+            if (stripeSubscription.getCurrentPeriodEnd() != null) {
+                newSubscription.setNextBillingDate(LocalDateTime.ofEpochSecond(stripeSubscription.getCurrentPeriodEnd(), 0, java.time.ZoneOffset.UTC));
+            } else {
+                // Fallback si la date de fin de la période n'est pas immédiatement disponible
+                newSubscription.setNextBillingDate(LocalDateTime.now().plus(1, java.time.temporal.ChronoUnit.MONTHS)); // Exemple par défaut
+            }
+
+            return subscriptionRepository.save(newSubscription);
+
+        } catch (StripeException e) {
+            throw new RuntimeException("Erreur lors de la création de l'abonnement Stripe : " + e.getMessage());
+        }
     }
 
     // Historique des abonnements
@@ -401,7 +459,7 @@ public class SubscriptionService {
     public void changeSubscriptionLevel(Long subscriptionId, String newLevelName) {
         // Récupérer l'abonnement existant
         Subscription subscription = subscriptionRepository.findById(subscriptionId)
-                .orElseThrow(() -> new RuntimeException("Subscription not found"));
+                .orElseThrow(() -> new RuntimeException(SUBSCRIPTION_NOT_FOUND_MESSAGE));
 
         SubscriptionLevel oldSubscriptionLevel = subscription.getSubscriptionLevel();
         String oldLevelString = (oldSubscriptionLevel != null)
@@ -427,7 +485,7 @@ public class SubscriptionService {
         logger.info("Changement du niveau d'abonnement pour ID {} : {} → {}",
                 subscriptionId, oldLevelString, newLevelString);
 
-        // Publier l’événement
+        // Publier l’Évènement
         levelChangedEventPublisher.publishSubscriptionLevelChangedEvent(subscription, oldLevelString);
     }
 
@@ -450,35 +508,86 @@ public class SubscriptionService {
 
     public void cancelSubscription(Long subscriptionId, String reason) {
         Subscription subscription = subscriptionRepository.findById(subscriptionId)
-                .orElseThrow(() -> new RuntimeException("Subscription not found"));
+                .orElseThrow(() -> new RuntimeException(SUBSCRIPTION_NOT_FOUND_MESSAGE));
         subscription.setStatus(Subscription.SubscriptionStatus.CANCELLED); // Mettre à jour le statut
         subscription.setCancelledAt(java.time.LocalDateTime.now()); // Enregistrer la date d'annulation
         subscriptionRepository.save(subscription);
         subscriptionCancelledEventPublisher.publishSubscriptionCancelledEvent(subscription, reason);
-        // ... autres logiques (par exemple, remboursement, désactivation des accès) ...
+
+        // Informer le service de gestion des accès de l'annulation
+        if (subscription.getUser() != null) {
+            accessControlEventPublisher.publishSubscriptionCancelledForAccessControl(
+                    subscription.getUser().getId(),
+                    subscription.getSubscriptionLevel().getLevel().name(), // Envoyer le nom du niveau
+                    reason);
+            logger.info(
+                    "Évènement d'annulation d'abonnement publié pour le contrôle d'accès (utilisateur ID {}, niveau '{}', raison '{}').",
+                    subscription.getUser().getId(), subscription.getSubscriptionLevel().getLevel().name(), reason);
+        } else {
+            logger.warn(
+                    "Utilisateur non trouvé pour l'abonnement ID {}, impossible de publier l'événement de contrôle d'accès pour l'annulation.",
+                    subscriptionId);
+        }
+
+        if (shouldProcessRefund(subscription, reason)) {
+            try {
+                String chargeId = subscription.getStripeChargeId(); // Supposons que vous stockiez l'ID de la charge dans l'entité Subscription
+                if (chargeId != null) {
+                    Refund refund = stripeBillingService.refundCharge(chargeId, "Subscription cancelled: " + reason);
+                    logger.info("Remboursement Stripe {} initié pour la charge {} suite à l'annulation de l'abonnement ID {}",
+                                refund.getId(), chargeId, subscriptionId);
+                    // Mettre à jour le statut du remboursement dans votre base de données si nécessaire
+                } else {
+                    logger.warn("Impossible de trouver l'ID de charge Stripe pour l'abonnement ID {}", subscriptionId);
+                }
+            } catch (StripeException e) {
+                logger.error("Erreur lors du traitement du remboursement pour l'abonnement ID {} : {}", subscriptionId, e.getMessage());
+            }
+        }
     }
+
+    // Implémentez votre logique de politique de remboursement ici
+    private boolean shouldProcessRefund(Subscription subscription, String reason) {
+        // Exemple de politique : rembourser si l'annulation a lieu dans les 7 jours suivant le début de l'abonnement
+        return subscription.getStartDate().isAfter(java.time.LocalDateTime.now().minusDays(7));
+    }
+
+    // Vous devrez également vous assurer que votre entité Subscription a un champ stripeChargeId
+    // et que ce champ est renseigné lors de la création de l'abonnement.
 
     public void processSuccessfulRenewal(Long subscriptionId) {
         Subscription subscription = subscriptionRepository.findById(subscriptionId)
-                .orElseThrow(() -> new RuntimeException("Subscription not found"));
-        // Mettre à jour la date de prochaine facturation et potentiellement d'autres informations
-        subscription.setNextBillingDate(calculateNextBillingDate(subscription));
+                .orElseThrow(() -> new RuntimeException(SUBSCRIPTION_NOT_FOUND_MESSAGE));
+        // Mettre à jour la date de prochaine facturation et potentiellement d'autres
+        // informations
+        subscription.setNextBillingDate(billingCalculationService.calculateNextBillingDate(subscription));
         subscriptionRepository.save(subscription);
         subscriptionRenewedEventPublisher.publishSubscriptionRenewedEvent(subscription);
-        // ... autres logiques (par exemple, mise à jour de la facture) ...
     }
-    // ... (méthode calculateNextBillingDate)
 
     public void reactivateSubscription(Long subscriptionId) {
         Subscription subscription = subscriptionRepository.findById(subscriptionId)
-                .orElseThrow(() -> new RuntimeException("Subscription not found"));
+                .orElseThrow(() -> new RuntimeException(SUBSCRIPTION_NOT_FOUND_MESSAGE));
         subscription.setStatus(Subscription.SubscriptionStatus.ACTIVE); // Mettre à jour le statut
         // Potentiellement recalculer la prochaine date de facturation
-        subscription.setNextBillingDate(calculateNextBillingDateAfterReactivation(subscription));
+        subscription
+                .setNextBillingDate(billingCalculationService.calculateNextBillingDateAfterReactivation(subscription));
         subscriptionRepository.save(subscription);
         subscriptionReactivatedEventPublisher.publishSubscriptionReactivatedEvent(subscription);
-        // ... autres logiques (par exemple, réactiver les accès) ...
-    }
 
-    // ... (méthode calculateNextBillingDateAfterReactivation)
+        // Publier un événement pour informer le service de gestion des accès
+        if (subscription.getUser() != null) {
+            accessControlEventPublisher.publishSubscriptionReactivatedForAccessControl(
+                    subscription.getUser().getId(),
+                    subscription.getSubscriptionLevel().getLevel().name() // Envoyer le nom du niveau
+            );
+            logger.info(
+                    "Événement de réactivation d'abonnement publié pour le contrôle d'accès (utilisateur ID {}, niveau '{}').",
+                    subscription.getUser().getId(), subscription.getSubscriptionLevel().getLevel().name());
+        } else {
+            logger.warn(
+                    "Utilisateur non trouvé pour l'abonnement ID {}, impossible de publier l'événement de contrôle d'accès.",
+                    subscriptionId);
+        }
+    }
 }

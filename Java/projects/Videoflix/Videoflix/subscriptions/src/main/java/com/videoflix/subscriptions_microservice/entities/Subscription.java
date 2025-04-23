@@ -70,6 +70,14 @@ public class Subscription {
     @Column(name = "next_renewal_date")
     private LocalDateTime nextRenewalDate;
 
+    /** Date prévue pour la prochaine facturation */
+    @Column(name = "next_billing_date")
+    private LocalDateTime nextBillingDate;
+
+    /** Date prévue pour le prochain essai */
+    @Column(name = "next_retry_date")
+    private LocalDateTime nextRetryDate;
+
     /** Identifiant du client dans la passerelle de paiement (Stripe) */
     @Column(name = "customer_id", nullable = false)
     private String customerId;
@@ -103,6 +111,9 @@ public class Subscription {
 
     @Column(name = "cancelled_at")
     private LocalDateTime cancelledAt;
+
+    @Column(name = "stripe_charge_id")
+    private String stripeChargeId;
 
     public enum SubscriptionStatus {
         ACTIVE, // Abonnement actif et en cours

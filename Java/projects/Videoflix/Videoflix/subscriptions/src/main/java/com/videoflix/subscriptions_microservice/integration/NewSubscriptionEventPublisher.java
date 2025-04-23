@@ -26,10 +26,10 @@ public class NewSubscriptionEventPublisher {
         try {
             String message = objectMapper.writeValueAsString(event);
             rabbitTemplate.convertAndSend(NEW_SUBSCRIPTION_EXCHANGE, WELCOME_EMAIL_ROUTING_KEY, message);
-            logger.info("Événement NewSubscriptionCreatedEvent publié sur l'échange {} avec la clé de routage {}",
+            logger.info("Évènement NewSubscriptionCreatedEvent publié sur l'échange {} avec la clé de routage {}",
                     NEW_SUBSCRIPTION_EXCHANGE, WELCOME_EMAIL_ROUTING_KEY);
         } catch (Exception e) {
-            logger.error("Erreur lors de la publication de l'événement NewSubscriptionCreatedEvent : {}",
+            logger.error("Erreur lors de la publication de l'Évènement NewSubscriptionCreatedEvent : {}",
                     e.getMessage(), e);
             // Gérer l'erreur (log, potentiellement un mécanisme de réessai de publication)
         }

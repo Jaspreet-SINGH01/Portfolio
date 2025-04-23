@@ -47,10 +47,10 @@ public class SubscriptionCancelledEventPublisher {
             String message = objectMapper.writeValueAsString(payload);
             rabbitTemplate.convertAndSend(SUBSCRIPTION_CANCELLED_EXCHANGE, SUBSCRIPTION_CANCELLED_ROUTING_KEY, message);
             logger.info(
-                    "Événement SubscriptionCancelledEvent publié sur l'échange {} avec la clé de routage {}, payload: {}",
+                    "Évènement SubscriptionCancelledEvent publié sur l'échange {} avec la clé de routage {}, payload: {}",
                     SUBSCRIPTION_CANCELLED_EXCHANGE, SUBSCRIPTION_CANCELLED_ROUTING_KEY, payload);
         } catch (Exception e) {
-            logger.error("Erreur lors de la publication de l'événement SubscriptionCancelledEvent : {}",
+            logger.error("Erreur lors de la publication de l'Évènement SubscriptionCancelledEvent : {}",
                     e.getMessage(), e);
         }
     }

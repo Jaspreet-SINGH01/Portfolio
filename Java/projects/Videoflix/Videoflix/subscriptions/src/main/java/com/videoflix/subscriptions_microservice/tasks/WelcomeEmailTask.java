@@ -44,7 +44,7 @@ public class WelcomeEmailTask {
         User user = event.getUser();
         Subscription subscription = event.getSubscription();
 
-        logger.info("Réception de l'événement de création d'un nouvel abonnement pour l'utilisateur {}", user.getId());
+        logger.info("Réception de l'Évènement de création d'un nouvel abonnement pour l'utilisateur {}", user.getId());
 
         try {
             notificationService.sendWelcomeEmail(user, subscription);

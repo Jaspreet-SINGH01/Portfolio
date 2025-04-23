@@ -49,10 +49,10 @@ public class PaymentFailedEventPublisher {
             String message = objectMapper.writeValueAsString(payload);
             rabbitTemplate.convertAndSend(PAYMENT_FAILED_EXCHANGE, PAYMENT_FAILED_ROUTING_KEY, message);
             logger.warn(
-                    "Événement PaymentFailedEvent publié sur l'échange {} avec la clé de routage {}, payload: {}",
+                    "Évènement PaymentFailedEvent publié sur l'échange {} avec la clé de routage {}, payload: {}",
                     PAYMENT_FAILED_EXCHANGE, PAYMENT_FAILED_ROUTING_KEY, payload);
         } catch (Exception e) {
-            logger.error("Erreur lors de la publication de l'événement PaymentFailedEvent : {}",
+            logger.error("Erreur lors de la publication de l'Évènement PaymentFailedEvent : {}",
                     e.getMessage(), e);
         }
     }
