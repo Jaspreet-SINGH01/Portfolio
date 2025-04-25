@@ -90,6 +90,13 @@ public class Subscription {
     @Column(name = "price_id")
     private String priceId;
 
+    /** Prix appliqué dans Stripe */
+    @Column(name = "price")
+    private double price;
+
+    @Column(name = "currency")
+    private String currency;
+
     /** Message d'erreur du dernier paiement */
     @Column(name = "last_payment_error")
     private String lastPaymentError;

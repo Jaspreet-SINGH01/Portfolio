@@ -32,6 +32,9 @@ public class User {
     @Column(name = "push_token")
     private String pushToken;
 
+    @Column(name = "stripe_customer_id")
+    private String stripeCustomerId;
+
     @OneToMany(mappedBy = "user")
     private List<UserRole> userRoles;
 }

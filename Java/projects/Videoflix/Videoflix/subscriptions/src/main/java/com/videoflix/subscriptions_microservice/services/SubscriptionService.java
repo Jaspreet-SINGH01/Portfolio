@@ -2,11 +2,14 @@ package com.videoflix.subscriptions_microservice.services;
 
 import com.stripe.exception.StripeException;
 import com.stripe.model.Refund;
+import com.stripe.param.RefundCreateParams;
+import com.stripe.param.RefundCreateParams.Reason;
 import com.videoflix.subscriptions_microservice.dtos.AdminUpdateSubscriptionRequest;
 import com.videoflix.subscriptions_microservice.entities.Promotion;
 import com.videoflix.subscriptions_microservice.entities.Subscription;
 import com.videoflix.subscriptions_microservice.entities.SubscriptionLevel;
 import com.videoflix.subscriptions_microservice.entities.User;
+import com.videoflix.subscriptions_microservice.exceptions.StripeIntegrationException;
 import com.videoflix.subscriptions_microservice.integration.AccessControlEventPublisher;
 import com.videoflix.subscriptions_microservice.integration.SubscriptionCancelledEventPublisher;
 import com.videoflix.subscriptions_microservice.integration.SubscriptionLevelChangedEventPublisher;
@@ -319,53 +322,53 @@ public class SubscriptionService {
         }
     }
 
-    
     public Subscription createNewSubscription(Long userId, SubscriptionLevel subscriptionLevel) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MESSAGE + userId));
 
         try {
-            // Récupérer l'ID du prix Stripe associé au SubscriptionLevel
             String stripePriceId = subscriptionLevel.getStripePriceId();
             if (stripePriceId == null) {
-                throw new IllegalStateException("L'ID de prix Stripe n'est pas configuré pour le niveau d'abonnement : " + subscriptionLevel.getLevel());
+                throw new IllegalStateException("L'ID de prix Stripe n'est pas configuré pour le niveau d'abonnement : "
+                        + subscriptionLevel.getLevel());
             }
 
-            // Créer l'abonnement sur Stripe
-            StripeSubscription stripeSubscription = stripeBillingService.createSubscription(user.getStripeCustomerId(), stripePriceId);
+            com.stripe.model.Subscription stripeSubscription = stripeBillingService
+                    .createSubscription(user.getStripeCustomerId(), stripePriceId);
 
             String stripeChargeId = null;
-            // Tenter de récupérer l'ID de la charge du premier paiement
-            // Cela dépend de la façon dont Stripe a configuré votre abonnement (paiement immédiat ou non)
-            if (stripeSubscription.getLatestCharge() != null) {
-                stripeChargeId = stripeSubscription.getLatestCharge().getId();
-            } else if (stripeSubscription.getLatestInvoice() != null && stripeSubscription.getLatestInvoice().getPaymentIntentObject() != null && stripeSubscription.getLatestInvoice().getPaymentIntentObject().getLatestCharge() != null) {
-                stripeChargeId = stripeSubscription.getLatestInvoice().getPaymentIntentObject().getLatestCharge().getId();
+            // Tenter de récupérer l'ID de la charge via la dernière facture et le
+            // PaymentIntent
+            if (stripeSubscription.getLatestInvoiceObject() != null
+                    && stripeSubscription.getLatestInvoiceObject().getPaymentIntentObject() != null
+                    && stripeSubscription.getLatestInvoiceObject().getPaymentIntentObject()
+                            .getLatestChargeObject() != null) {
+                stripeChargeId = stripeSubscription.getLatestInvoiceObject().getPaymentIntentObject()
+                        .getLatestChargeObject().getId();
             }
 
             Subscription newSubscription = new Subscription();
             newSubscription.setUser(user);
             newSubscription.setStartDate(LocalDateTime.now());
-            // La date de fin sera gérée par Stripe ou calculée en fonction de la fréquence
             newSubscription.setSubscriptionLevel(subscriptionLevel);
             newSubscription.setStatus(Subscription.SubscriptionStatus.ACTIVE);
             newSubscription.setStripeSubscriptionId(stripeSubscription.getId());
-            newSubscription.setStripeChargeId(stripeChargeId); // Enregistrer l'ID de la charge
-            newSubscription.setPrice(subscriptionLevel.getPrice()); // Récupérer le prix du niveau
-            newSubscription.setCurrency(stripeSubscription.getCurrency()); // Récupérer la devise de Stripe
+            newSubscription.setStripeChargeId(stripeChargeId);
+            newSubscription.setPrice(subscriptionLevel.getPrice());
+            newSubscription.setCurrency(stripeSubscription.getCurrency());
 
-            // Initialiser la prochaine date de facturation (peut être ajustée après le premier paiement)
             if (stripeSubscription.getCurrentPeriodEnd() != null) {
-                newSubscription.setNextBillingDate(LocalDateTime.ofEpochSecond(stripeSubscription.getCurrentPeriodEnd(), 0, java.time.ZoneOffset.UTC));
+                newSubscription.setNextBillingDate(LocalDateTime.ofEpochSecond(stripeSubscription.getCurrentPeriodEnd(),
+                        0, java.time.ZoneOffset.UTC));
             } else {
-                // Fallback si la date de fin de la période n'est pas immédiatement disponible
-                newSubscription.setNextBillingDate(LocalDateTime.now().plus(1, java.time.temporal.ChronoUnit.MONTHS)); // Exemple par défaut
+                newSubscription.setNextBillingDate(LocalDateTime.now().plus(1, java.time.temporal.ChronoUnit.MONTHS));
             }
 
             return subscriptionRepository.save(newSubscription);
 
         } catch (StripeException e) {
-            throw new RuntimeException("Erreur lors de la création de l'abonnement Stripe : " + e.getMessage());
+            throw new StripeIntegrationException(
+                    "Erreur lors de la création de l'abonnement Stripe : " + e.getMessage());
         }
     }
 
@@ -531,29 +534,56 @@ public class SubscriptionService {
 
         if (shouldProcessRefund(subscription, reason)) {
             try {
-                String chargeId = subscription.getStripeChargeId(); // Supposons que vous stockiez l'ID de la charge dans l'entité Subscription
+                String chargeId = subscription.getStripeChargeId(); // Supposons que vous stockiez l'ID de la charge
+                                                                    // dans l'entité Subscription
                 if (chargeId != null) {
-                    Refund refund = stripeBillingService.refundCharge(chargeId, "Subscription cancelled: " + reason);
-                    logger.info("Remboursement Stripe {} initié pour la charge {} suite à l'annulation de l'abonnement ID {}",
-                                refund.getId(), chargeId, subscriptionId);
-                    // Mettre à jour le statut du remboursement dans votre base de données si nécessaire
+                    Refund refund = stripeBillingService.refundCharge(chargeId,
+                            RefundCreateParams.Reason.REQUESTED_BY_CUSTOMER);
+                    logger.info(
+                            "Remboursement Stripe {} initié pour la charge {} suite à l'annulation de l'abonnement ID {}",
+                            refund.getId(), chargeId, subscriptionId);
+                    // Mettre à jour le statut du remboursement dans votre base de données si
+                    // nécessaire
                 } else {
                     logger.warn("Impossible de trouver l'ID de charge Stripe pour l'abonnement ID {}", subscriptionId);
                 }
             } catch (StripeException e) {
-                logger.error("Erreur lors du traitement du remboursement pour l'abonnement ID {} : {}", subscriptionId, e.getMessage());
+                logger.error("Erreur lors du traitement du remboursement pour l'abonnement ID {} : {}", subscriptionId,
+                        e.getMessage());
             }
         }
     }
 
-    // Implémentez votre logique de politique de remboursement ici
+    // Implémenter la logique de politique de remboursement ici
     private boolean shouldProcessRefund(Subscription subscription, String reason) {
-        // Exemple de politique : rembourser si l'annulation a lieu dans les 7 jours suivant le début de l'abonnement
-        return subscription.getStartDate().isAfter(java.time.LocalDateTime.now().minusDays(7));
+        // 1. Rembourser intégralement si l'annulation a lieu dans les 7 jours suivant
+        // le début.
+        // 2. Rembourser partiellement (ou intégralement) si la raison de l'annulation
+        // est liée à un problème technique majeur ("technical_issue").
+        // 3. Aucun remboursement dans les autres cas.
+
+        boolean withinRefundPeriod = subscription.getStartDate().isAfter(java.time.LocalDateTime.now().minusDays(7));
+        boolean isTechnicalIssue = "technical_issue".equalsIgnoreCase(reason);
+
+        return withinRefundPeriod || isTechnicalIssue;
     }
 
-    // Vous devrez également vous assurer que votre entité Subscription a un champ stripeChargeId
-    // et que ce champ est renseigné lors de la création de l'abonnement.
+    // Méthode mise à jour pour accepter une String comme raison
+    public Refund refundCharge(String chargeId, Reason reason) throws StripeException {
+        RefundCreateParams params = RefundCreateParams.builder()
+                .setCharge(chargeId)
+                .setReason(reason)
+                .build();
+        return Refund.create(params);
+    }
+
+    public Refund refundPaymentIntent(String paymentIntentId, Reason reason) throws StripeException {
+        RefundCreateParams params = RefundCreateParams.builder()
+                .setPaymentIntent(paymentIntentId)
+                .setReason(reason)
+                .build();
+        return Refund.create(params);
+    }
 
     public void processSuccessfulRenewal(Long subscriptionId) {
         Subscription subscription = subscriptionRepository.findById(subscriptionId)

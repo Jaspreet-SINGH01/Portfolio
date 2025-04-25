@@ -35,7 +35,7 @@ public class StripeBillingService {
     public StripeBillingService(
             @Value("${stripe.api.secretKey}") String secretKey, // Récupère la clé secrète Stripe depuis la config
             PaymentFailedEventPublisher paymentFailedEventPublisher, // Éditeur d'événements en cas d'échec de paiement
-            SubscriptionRepository subscriptionRepository) { // Reposiory pour gérer les abonnements locaux
+            SubscriptionRepository subscriptionRepository) { // Repository pour gérer les abonnements locaux
         Stripe.apiKey = secretKey; // Configuration de la clé API Stripe
         this.paymentFailedEventPublisher = paymentFailedEventPublisher;
         this.subscriptionRepository = subscriptionRepository;
