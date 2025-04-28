@@ -60,4 +60,6 @@ public interface SubscriptionRepository
         List<Subscription> findByNextBillingDate(LocalDate reminderDate);
 
         Optional<StripeObject> findByStripeSubscriptionId(String stripeSubscriptionId);
+
+        Object findByEndDateBeforeAndStatusIn(LocalDateTime eq, List<Object> anyList);
 }

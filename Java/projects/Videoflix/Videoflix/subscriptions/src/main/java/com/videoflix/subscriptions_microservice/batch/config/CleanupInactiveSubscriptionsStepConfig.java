@@ -11,6 +11,7 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionManager;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -27,15 +28,22 @@ public class CleanupInactiveSubscriptionsStepConfig {
 
     public CleanupInactiveSubscriptionsStepConfig(
             JobRepository jobRepository,
-            PlatformTransactionManager transactionManager,
+            TransactionManager transactionManager2,
             SubscriptionRepository subscriptionRepository,
             InactiveSubscriptionProcessor inactiveSubscriptionProcessor,
             InactiveSubscriptionWriter inactiveSubscriptionWriter) {
         this.jobRepository = jobRepository;
-        this.transactionManager = transactionManager;
+        this.transactionManager = transactionManager2;
         this.subscriptionRepository = subscriptionRepository;
         this.inactiveSubscriptionProcessor = inactiveSubscriptionProcessor;
         this.inactiveSubscriptionWriter = inactiveSubscriptionWriter;
+    }
+
+    public CleanupInactiveSubscriptionsStepConfig(JobRepository jobRepository2, TransactionManager transactionManager2,
+            SubscriptionRepository subscriptionRepository2,
+            InactiveSubscriptionProcessor inactiveSubscriptionProcessor2,
+            InactiveSubscriptionWriter inactiveSubscriptionWriter2) {
+        //TODO Auto-generated constructor stub
     }
 
     @Bean

@@ -23,7 +23,7 @@ public class InactiveSubscriptionWriter implements ItemWriter<Subscription> {
 
     @Override
     @Transactional
-    public void write(Chunk<? extends Subscription> chunk) throws Exception {
+    public void write(List<Subscription> chunk) throws Exception {
         List<? extends Subscription> subscriptionsToDelete = chunk.getItems();
         logger.info("Suppression de {} abonnements inactifs.", subscriptionsToDelete.size());
         subscriptionRepository.deleteAll(subscriptionsToDelete);
