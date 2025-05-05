@@ -2,6 +2,7 @@ package com.videoflix.subscriptions_microservice.services;
 
 import com.videoflix.subscriptions_microservice.entities.Subscription;
 import com.videoflix.subscriptions_microservice.entities.User;
+import com.videoflix.subscriptions_microservice.templates.EmailTemplates;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,7 +11,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 /**
- * Service responsable de l'envoi des notifications par email aux utilisateurs
+ * Service responsable de l'envoi des notifications par e-mail aux utilisateurs
  * concernant leurs abonnements.
  */
 @Service
@@ -25,256 +26,153 @@ public class NotificationService {
     private String notificationSender;
 
     /**
-     * Constructeur du service de notification
-     * 
-     * @param mailSender Service d'envoi d'emails injecté par Spring
+     * Constructeur avec injection du mailSender.
      */
     public NotificationService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
 
     /**
-     * Envoie une notification à l'utilisateur lorsque son abonnement est sur le
-     * point d'expirer
-     * 
-     * @param user         L'utilisateur concerné
-     * @param subscription L'abonnement qui va expirer
+     * Envoie un e-mail pour avertir l'utilisateur que son abonnement va expirer.
      */
     public void sendSubscriptionExpiringNotification(User user, Subscription subscription) {
-        if (user == null || subscription == null) {
-            logger.error(NULL_PARAMS_ERROR);
+        if (!isValid(user, subscription))
             return;
-        }
 
-        if (user.getEmail() == null || user.getEmail().isEmpty()) {
-            logger.warn(
-                    "Impossible d'envoyer la notification d'expiration imminente à l'utilisateur {} car l'adresse e-mail est manquante.",
-                    user.getId());
-            return;
-        }
-
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(notificationSender);
-        message.setTo(user.getEmail());
-        message.setSubject("Votre abonnement Videoflix expire bientôt !");
-        message.setText(String.format("""
-                Cher %s,
-
-                Votre abonnement %s expire le %s.
-                Pour continuer à profiter de Videoflix sans interruption, veuillez renouveler votre abonnement.
-
-                Merci,
-                L'équipe Videoflix""",
-                user.getFirstname(), subscription.getSubscriptionLevel(), subscription.getEndDate()));
-
-        try {
-            mailSender.send(message);
-            logger.info("Notification d'expiration imminente envoyée à l'utilisateur {}", user.getId());
-        } catch (Exception e) {
-            logger.error("Erreur lors de l'envoi de la notification d'expiration imminente à l'utilisateur {}",
-                    user.getId(), e);
-        }
+        sendEmail(
+                user.getEmail(),
+                EmailTemplates.SUBJECT_SUBSCRIPTION_EXPIRING,
+                String.format(EmailTemplates.SUBSCRIPTION_EXPIRING_EMAIL,
+                        user.getFirstname(),
+                        subscription.getSubscriptionLevel(),
+                        subscription.getEndDate()),
+                user.getId(),
+                "expiration imminente");
     }
 
     /**
-     * Envoie une notification à l'utilisateur lorsque son abonnement a expiré
-     * 
-     * @param user         L'utilisateur concerné
-     * @param subscription L'abonnement qui a expiré
+     * Envoie un e-mail pour notifier que l’abonnement de l’utilisateur a expiré.
      */
     public void sendSubscriptionExpiredNotification(User user, Subscription subscription) {
-        if (user == null || subscription == null) {
-            logger.error(NULL_PARAMS_ERROR);
+        if (!isValid(user, subscription))
             return;
-        }
 
-        if (user.getEmail() == null || user.getEmail().isEmpty()) {
-            logger.warn(
-                    "Impossible d'envoyer la notification d'expiration à l'utilisateur {} car l'adresse e-mail est manquante.",
-                    user.getId());
-            return;
-        }
-
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(notificationSender);
-        message.setTo(user.getEmail());
-        message.setSubject("Votre abonnement Videoflix a expiré");
-        message.setText(String.format(
-                """
-                        Cher %s,
-
-                        Votre abonnement %s a expiré le %s.
-                        Pour retrouver l'accès à tout le contenu de Videoflix, veuillez renouveler votre abonnement dès aujourd'hui.
-
-                        Merci,
-                        L'équipe Videoflix""",
-                user.getFirstname(), subscription.getSubscriptionLevel(), subscription.getEndDate()));
-
-        try {
-            mailSender.send(message);
-            logger.info("Notification d'expiration envoyée à l'utilisateur {}", user.getId());
-        } catch (Exception e) {
-            logger.error("Erreur lors de l'envoi de la notification d'expiration à l'utilisateur {}", user.getId(),
-                    e);
-        }
+        sendEmail(
+                user.getEmail(),
+                EmailTemplates.SUBJECT_SUBSCRIPTION_EXPIRED,
+                String.format(EmailTemplates.SUBJECT_SUBSCRIPTION_EXPIRED,
+                        user.getFirstname(),
+                        subscription.getSubscriptionLevel(),
+                        subscription.getEndDate()),
+                user.getId(),
+                "expiration");
     }
 
     /**
-     * Envoie une notification à l'utilisateur lorsque sa période d'essai est sur le
-     * point de se terminer
-     * 
-     * @param user         L'utilisateur concerné
-     * @param subscription L'abonnement en période d'essai
+     * Envoie un e-mail pour avertir que la période d'essai se termine bientôt.
      */
     public void sendTrialPeriodEndingNotification(User user, Subscription subscription) {
-        if (user == null || subscription == null) {
-            logger.error(NULL_PARAMS_ERROR);
+        if (!isValid(user, subscription))
             return;
-        }
 
-        if (user.getEmail() == null || user.getEmail().isEmpty()) {
-            logger.warn(
-                    "Impossible d'envoyer la notification de fin de période d'essai imminente à l'utilisateur {} car l'adresse e-mail est manquante.",
-                    user.getId());
+        sendEmail(
+                user.getEmail(),
+                EmailTemplates.SUBJECT_TRIAL_ENDING,
+                String.format(EmailTemplates.TRIAL_PERIOD_ENDING_NOTIFICATION,
+                        user.getFirstname(),
+                        subscription.getSubscriptionLevel(),
+                        subscription.getTrialEndDate()),
+                user.getId(),
+                "fin de période d’essai imminente");
+    }
+
+    /**
+     * Envoie un e-mail pour notifier que la période d’essai est terminée.
+     */
+    public void sendTrialPeriodEndedNotification(User user, Subscription subscription) {
+        if (!isValid(user, subscription))
             return;
-        }
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(notificationSender);
-        message.setTo(user.getEmail());
-        message.setSubject("Votre période d'essai Videoflix se termine bientôt !");
-        message.setText(String.format(
-                """
-                        Cher %s,
+        sendEmail(
+                user.getEmail(),
+                EmailTemplates.SUBJECT_TRIAL_ENDED,
+                String.format(EmailTemplates.SUBJECT_TRIAL_ENDED,
+                        user.getFirstname(),
+                        subscription.getSubscriptionLevel(),
+                        subscription.getTrialEndDate()),
+                user.getId(),
+                "fin de période d’essai");
+    }
 
-                        Votre période d'essai pour l'abonnement %s se termine le %s.
-                        Profitez-en au maximum jusqu'à la fin !
+    /**
+     * Envoie un e-mail de bienvenue à l'utilisateur.
+     */
+    public void sendWelcomeEmail(User user, Subscription subscription) {
+        if (!isValid(user, subscription))
+            return;
 
-                        Pour continuer à bénéficier de Videoflix sans interruption, vous pouvez souscrire à un plan payant dès maintenant.
+        sendEmail(
+                user.getEmail(),
+                EmailTemplates.SUBJECT_WELCOME,
+                String.format(EmailTemplates.WELCOME_EMAIL,
+                        user.getFirstname(),
+                        subscription.getSubscriptionLevel()),
+                user.getId(),
+                "de bienvenue");
+    }
 
-                        Merci,
-                        L'équipe Videoflix""",
-                user.getFirstname(), subscription.getSubscriptionLevel(), subscription.getTrialEndDate()));
+    /**
+     * Envoie un rappel de paiement à l’utilisateur.
+     */
+    public void sendPaymentReminderNotification(User user, Subscription subscription, int daysBefore) {
+        if (!isValid(user, subscription))
+            return;
 
+        String body = String.format(EmailTemplates.SUBSCRIPTION_NOTIFICATION,
+                user.getFirstname(),
+                subscription.getSubscriptionLevel(),
+                subscription.getNextBillingDate(),
+                daysBefore);
+
+        sendEmail(
+                user.getEmail(),
+                EmailTemplates.SUBJECT_PAYMENT_REMINDER,
+                body,
+                user.getId(),
+                "de rappel de paiement");
+    }
+
+    /**
+     * Méthode utilitaire pour envoyer un e-mail générique avec logs d’erreur.
+     */
+    private void sendEmail(String to, String subject, String body, Long userId, String type) {
         try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(notificationSender);
+            message.setTo(to);
+            message.setSubject(subject);
+            message.setText(body);
+
             mailSender.send(message);
-            logger.info("Notification de fin de période d'essai imminente envoyée à l'utilisateur {}",
-                    user.getId());
+            logger.info("E-mail {} envoyé à l'utilisateur {}", type, userId);
         } catch (Exception e) {
-            logger.error(
-                    "Erreur lors de l'envoi de la notification de fin de période d'essai imminente à l'utilisateur {}",
-                    user.getId(), e);
+            logger.error("Erreur lors de l'envoi de l'e-mail {} à l'utilisateur {}", type, userId, e);
         }
     }
 
     /**
-     * Envoie une notification à l'utilisateur lorsque sa période d'essai est
-     * terminée
-     * 
-     * @param user         L'utilisateur concerné
-     * @param subscription L'abonnement dont la période d'essai est terminée
+     * Vérifie si les objets utilisateur et abonnement sont valides.
      */
-    public void sendTrialPeriodEndedNotification(User user, Subscription subscription) {
+    private boolean isValid(User user, Subscription subscription) {
         if (user == null || subscription == null) {
             logger.error(NULL_PARAMS_ERROR);
-            return;
+            return false;
         }
-
-        if (user.getEmail() == null || user.getEmail().isEmpty()) {
-            logger.warn(
-                    "Impossible d'envoyer la notification de fin de période d'essai à l'utilisateur {} car l'adresse e-mail est manquante.",
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            logger.warn("Impossible d'envoyer l'e-mail à l'utilisateur {} car l'adresse e-mail est manquante.",
                     user.getId());
-            return;
+            return false;
         }
-
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(notificationSender);
-        message.setTo(user.getEmail());
-        message.setSubject("Votre période d'essai Videoflix est terminée");
-        message.setText(String.format("""
-                Cher %s,
-
-                Votre période d'essai pour l'abonnement %s s'est terminée le %s.
-                Nous espérons que vous avez apprécié votre essai !
-
-                Pour continuer à accéder à tout notre contenu, veuillez souscrire à un plan payant dès aujourd'hui.
-
-                Merci,
-                L'équipe Videoflix""",
-                user.getFirstname(), subscription.getSubscriptionLevel(), subscription.getTrialEndDate()));
-
-        try {
-            mailSender.send(message);
-            logger.info("Notification de fin de période d'essai envoyée à l'utilisateur {}", user.getId());
-        } catch (Exception e) {
-            logger.error("Erreur lors de l'envoi de la notification de fin de période d'essai à l'utilisateur {}",
-                    user.getId(), e);
-        }
+        return true;
     }
-
-    // Méthode pour envoyer l'e-mail de bienvenue
-    public void sendWelcomeEmail(User user, Subscription subscription) {
-        if (user.getEmail() != null) {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(notificationSender);
-            message.setTo(user.getEmail());
-            message.setSubject("Bienvenue chez Videoflix !");
-            message.setText("""
-                    Cher %s,
-
-                    Bienvenue chez Videoflix ! Vous avez souscrit à l'abonnement %s.
-                    Profitez de notre vaste bibliothèque de contenu !
-
-                    Voici quelques liens utiles :
-                    - [Lien vers votre compte]
-                    - [Lien vers notre catalogue]
-                    - [Lien vers la FAQ ou l'aide]
-
-                    Merci de nous rejoindre,
-                    L'équipe Videoflix""".formatted(user.getFirstname(), subscription.getSubscriptionLevel()));
-
-            try {
-                mailSender.send(message);
-                logger.info("E-mail de bienvenue envoyé à l'utilisateur {}", user.getId());
-            } catch (Exception e) {
-                logger.error("Erreur lors de l'envoi de l'e-mail de bienvenue à l'utilisateur {}", user.getId(), e);
-            }
-        } else {
-            logger.warn(
-                    "Impossible d'envoyer l'e-mail de bienvenue à l'utilisateur {} car l'adresse e-mail est manquante.",
-                    user.getId());
-        }
-    }
-
-    public void sendPaymentReminderNotification(User user, Subscription subscription, int daysBefore) {
-        if (user.getEmail() != null) {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(notificationSender);
-            message.setTo(user.getEmail());
-            message.setSubject("Rappel de paiement Videoflix à venir");
-            message.setText(String.format("Cher %s,\n\nCeci est un rappel amical concernant votre abonnement %s.\n" +
-                    "Votre prochaine facturation aura lieu le %s (dans %d jours).\n\n" +
-                    "Veuillez vous assurer que vos informations de paiement sont à jour pour éviter toute interruption de service.\n\n"
-                    +
-                    "Si vous avez des questions, n'hésitez pas à contacter notre support.\n\n" +
-                    "Merci,\nL'équipe Videoflix",
-                    user.getFirstname(), subscription.getSubscriptionLevel(), subscription.getNextBillingDate(),
-                    daysBefore));
-
-            try {
-                mailSender.send(message);
-                logger.info("Rappel de paiement envoyé à l'utilisateur {} (abonnement {}), facturation prévue le {}.",
-                        user.getId(), subscription.getId(), subscription.getNextBillingDate());
-            } catch (Exception e) {
-                logger.error("Erreur lors de l'envoi du rappel de paiement à l'utilisateur {} (abonnement {}) : {}",
-                        user.getId(), subscription.getId(), e);
-                // Gérer l'erreur (log, potentiellement enregistrer l'échec pour une révision)
-            }
-        } else {
-            logger.warn(
-                    "Impossible d'envoyer le rappel de paiement à l'utilisateur {} car l'adresse e-mail est manquante.",
-                    user.getId());
-        }
-    }
-
 }

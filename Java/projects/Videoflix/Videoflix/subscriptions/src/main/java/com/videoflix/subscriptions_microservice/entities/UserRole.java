@@ -21,7 +21,6 @@ public class UserRole {
     private Role role;
 
     public void setRoleId(Long id2) {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'setRoleId'");
     }
 }

@@ -10,13 +10,15 @@ public class PaymentInfoUpdatedEvent extends ApplicationEvent {
 
     // Inclure des détails spécifiques sur les informations mises à
     // jour si nécessaire
-    // private final String updatedPaymentMethod;
-    // private final String lastFourDigits;
+    private final String updatedPaymentMethod;
+    private final String lastFourDigits;
 
     public PaymentInfoUpdatedEvent(Object source, User user, Subscription subscription) {
         super(source);
         this.user = user;
         this.subscription = subscription;
+        this.updatedPaymentMethod = "";
+        this.lastFourDigits = "";
     }
 
     public User getUser() {
@@ -27,12 +29,11 @@ public class PaymentInfoUpdatedEvent extends ApplicationEvent {
         return subscription;
     }
 
-    // Si j'ai inclus des détails spécifiques, ajouter leurs getters ici
-    // public String getUpdatedPaymentMethod() {
-    // return updatedPaymentMethod;
-    // }
+    public String getUpdatedPaymentMethod() {
+        return updatedPaymentMethod;
+    }
 
-    // public String getLastFourDigits() {
-    // return lastFourDigits;
-    // }
+    public String getLastFourDigits() {
+        return lastFourDigits;
+    }
 }

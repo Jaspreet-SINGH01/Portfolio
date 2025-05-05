@@ -48,8 +48,18 @@ public class Invoice {
     @Column(name = "stripe_invoice_id", unique = true)
     private String stripeInvoiceId; // Facultatif: si vous liez vos factures à Stripe
 
-    // Ajoutez d'autres champs pertinents pour votre gestion des factures
-    // par exemple: date de paiement, méthode de paiement, etc.
+    // Champs supplémentaires pour la gestion des factures
+    @Column(name = "payment_date")
+    private LocalDateTime paymentDate; // Date à laquelle le paiement a été effectué
+
+    @Column(name = "payment_method")
+    private String paymentMethod; // Méthode de paiement utilisée (e.g., Carte de crédit, PayPal)
+
+    @Column(name = "transaction_id")
+    private String transactionId; // Identifiant de la transaction de paiement
+
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes; // Notes ou informations supplémentaires concernant la facture
 
     public enum InvoiceStatus {
         DRAFT,

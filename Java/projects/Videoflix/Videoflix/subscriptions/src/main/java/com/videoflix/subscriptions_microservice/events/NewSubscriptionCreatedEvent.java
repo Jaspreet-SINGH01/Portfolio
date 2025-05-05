@@ -2,6 +2,7 @@ package com.videoflix.subscriptions_microservice.events;
 
 import com.videoflix.subscriptions_microservice.entities.Subscription;
 import com.videoflix.subscriptions_microservice.entities.User;
+
 import org.springframework.context.ApplicationEvent;
 
 public class NewSubscriptionCreatedEvent extends ApplicationEvent {
