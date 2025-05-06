@@ -22,6 +22,9 @@ public class SubscriptionLevel {
     @Column(name = "features")
     private String features; // Caractéristiques de l'abonnement (liste de fonctionnalités)
 
+    @Column(name = "description")
+    private String description; // Description de l'abonnement (liste de fonctionnalités)
+
     @Column(name = "billing_frequency", nullable = false)
     @Enumerated(EnumType.STRING)
     private BillingFrequency billingFrequency; // Fréquence de facture

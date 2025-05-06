@@ -31,33 +31,33 @@ public interface SubscriptionRepository
 
         long countByStatusAndStartDateLessThan(SubscriptionStatus active, LocalDateTime startDateTime);
 
-        List<Subscription> findByEndDate(LocalDate today);
+        List<Subscription> findByEndDate(LocalDateTime today);
 
-        List<Subscription> findByEndDateBeforeAndStatusNot(LocalDate today, SubscriptionStatus expired);
+        List<Subscription> findByEndDateBeforeAndStatusNot(LocalDateTime today, SubscriptionStatus expired);
 
-        List<Subscription> findByTrialEndDate(LocalDate today);
+        List<Subscription> findByTrialEndDate(LocalDateTime today);
 
         List<Subscription> findByTrialEndDateBeforeAndStatus(LocalDate today, SubscriptionStatus trial);
 
         List<Subscription> findByStatusAndCancellationDateBefore(SubscriptionStatus cancelled,
-                        LocalDate archiveThreshold);
+                        LocalDateTime archiveThreshold);
 
-        List<Subscription> findInactiveBefore(LocalDate deletionThreshold);
+        List<Subscription> findInactiveBefore(LocalDateTime deletionThreshold);
 
         long countByCreationTimestampBetween(LocalDateTime startOfYesterday, LocalDateTime endOfYesterday);
 
-        long countByStatusAndCancellationDateBetween(SubscriptionStatus cancelled, LocalDate localDate,
-                        LocalDate localDate2);
+        long countByStatusAndCancellationDateBetween(SubscriptionStatus cancelled, LocalDateTime startDate,
+                        LocalDateTime endDate);
 
-        List<Subscription> findByStatusAndLastPaymentDateBetween(SubscriptionStatus active, LocalDate minusDays,
-                        LocalDate localDate);
+        List<Subscription> findByStatusAndLastPaymentDateBetween(SubscriptionStatus active, LocalDateTime minusDays,
+                        LocalDateTime localDate);
 
         List<Subscription> findSubscriptionsUpdatedSince(LocalDateTime lastSyncTimestamp, int i, int batchSize);
 
         List<Subscription> findByStatusAndLastActivityBefore(Subscription.SubscriptionStatus status,
                         LocalDateTime lastActivityBefore, Pageable pageable);
 
-        List<Subscription> findByNextBillingDate(LocalDate reminderDate);
+        List<Subscription> findByNextBillingDate(LocalDateTime reminderDate);
 
         Optional<StripeObject> findByStripeSubscriptionId(String stripeSubscriptionId);
 

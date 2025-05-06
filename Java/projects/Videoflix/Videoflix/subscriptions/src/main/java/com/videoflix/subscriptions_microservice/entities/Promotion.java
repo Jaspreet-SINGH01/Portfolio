@@ -28,4 +28,7 @@ public class Promotion {
 
     @Column(name = "active")
     private boolean active; // Indique si la promotion est active
+
+    @Column(name = "description")
+    private String description; // Description de la promotion
 }

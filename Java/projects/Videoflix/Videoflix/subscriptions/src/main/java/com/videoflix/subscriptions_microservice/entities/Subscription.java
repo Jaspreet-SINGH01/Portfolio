@@ -41,6 +41,10 @@ public class Subscription {
     @JoinColumn(name = "promotion_code_id")
     private Promotion promotion;
 
+    /** Date de création de l'abonnement */
+    @Column(name = "creation_time_stamp", nullable = false)
+    private LocalDateTime creationTimestamp;
+
     /** Date de début de l'abonnement */
     @Column(name = "start_date", nullable = false)
     private LocalDateTime startDate;
@@ -121,6 +125,9 @@ public class Subscription {
 
     @Column(name = "stripe_charge_id")
     private String stripeChargeId;
+
+    @Column(name = "last_activity")
+    private LocalDateTime lastActivity;
 
     public enum SubscriptionStatus {
         ACTIVE, // Abonnement actif et en cours

@@ -26,6 +26,9 @@ public class Payment {
     @Column(name = "payment_id")
     private String paymentId; // Identifiant du paiement (Stripe, etc.)
 
+    @Column(name = "payment_method")
+    private String paymentMethod; // Méthode de paiement (PayPal,...)
+
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     private PaymentStatus status; // Statut du paiement
