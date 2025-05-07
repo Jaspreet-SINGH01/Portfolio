@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 public class NotificationService {
 
     private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
-    private static final String NULL_PARAMS_ERROR = "Impossible d'envoyer la notification: utilisateur ou abonnement null";
+    static final String NULL_PARAMS_ERROR = "Impossible d'envoyer la notification: utilisateur ou abonnement null";
 
     private final JavaMailSender mailSender;
 

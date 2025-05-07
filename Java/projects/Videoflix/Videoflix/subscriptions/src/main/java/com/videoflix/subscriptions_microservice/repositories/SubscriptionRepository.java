@@ -5,7 +5,6 @@ import com.videoflix.subscriptions_microservice.entities.Subscription;
 import com.videoflix.subscriptions_microservice.entities.Subscription.SubscriptionStatus;
 import com.videoflix.subscriptions_microservice.entities.User;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +36,7 @@ public interface SubscriptionRepository
 
         List<Subscription> findByTrialEndDate(LocalDateTime today);
 
-        List<Subscription> findByTrialEndDateBeforeAndStatus(LocalDate today, SubscriptionStatus trial);
+        List<Subscription> findByTrialEndDateBeforeAndStatus(LocalDateTime today, SubscriptionStatus trial);
 
         List<Subscription> findByStatusAndCancellationDateBefore(SubscriptionStatus cancelled,
                         LocalDateTime archiveThreshold);

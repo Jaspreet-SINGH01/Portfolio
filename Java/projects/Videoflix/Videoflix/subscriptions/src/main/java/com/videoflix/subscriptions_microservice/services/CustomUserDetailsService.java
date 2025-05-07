@@ -20,7 +20,7 @@ import java.util.List;
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
+    final RoleRepository roleRepository;
     private final UserRoleRepository userRoleRepository;
 
     public CustomUserDetailsService(UserRepository userRepository, RoleRepository roleRepository,
