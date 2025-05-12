@@ -164,7 +164,7 @@ class NotificationServiceTest {
                 userWithoutEmail.getId());
     }
 
-    // Répétez des tests similaires pour chaque méthode d'envoi d'e-mail
+    // Répéter des tests similaires pour chaque méthode d'envoi d'e-mail
     // (sendSubscriptionExpiredNotification,
     // sendTrialPeriodEndingNotification, sendTrialPeriodEndedNotification,
     // sendWelcomeEmail,

@@ -27,7 +27,7 @@ public class PaymentFailedEventPublisher {
         this.objectMapper = objectMapper;
     }
 
-    public void publishPaymentFailedEvent(Subscription subscription, String failureReason) {
+    public void publishPaymentFailedEvent(com.stripe.model.Subscription subscription, String failureReason) {
         try {
             Map<String, Object> payload = new HashMap<>();
             payload.put("subscriptionId", subscription.getId());
