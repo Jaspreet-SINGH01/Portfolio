@@ -12,20 +12,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 // @ExtendWith(MockitoExtension.class) permet d'utiliser les fonctionnalités de Mockito dans ce test.
 @ExtendWith(MockitoExtension.class)
- class StripeClientTest {
+class StripeClientTest {
 
     // @Mock crée un mock de la classe Subscription (de Stripe).
     @Mock
@@ -43,7 +42,8 @@ import static org.mockito.Mockito.when;
     @Mock
     private Refund stripeRefund;
 
-    // @InjectMocks crée une instance de StripeClient et y injecte les mocks annotés.
+    // @InjectMocks crée une instance de StripeClient et y injecte les mocks
+    // annotés.
     @InjectMocks
     private StripeClient stripeClient;
 
@@ -56,16 +56,21 @@ import static org.mockito.Mockito.when;
                 .addItem(SubscriptionCreateParams.Item.builder().setPrice("price_abc").build())
                 .build();
 
-        // Configuration du mock stripeSubscription pour retourner un objet lorsqu'il est créé.
-        when(Subscription.create(any(SubscriptionCreateParams.class))).thenReturn(stripeSubscription);
+        // Utilisation de mockStatic pour pouvoir vérifier les appels aux méthodes
+        // statiques de Subscription.
+        try (MockedStatic<Subscription> mockedStaticSubscription = Mockito.mockStatic(Subscription.class)) {
+            // Configuration du comportement de la méthode statique create.
+            when(Subscription.create(any(SubscriptionCreateParams.class))).thenReturn(stripeSubscription);
 
-        // WHEN : Appel de la méthode createSubscription de StripeClient.
-        Subscription result = stripeClient.createSubscription(params);
+            // WHEN : Appel de la méthode createSubscription de StripeClient.
+            Subscription result = stripeClient.createSubscription(params);
 
-        // THEN : Vérification que la méthode Subscription.create de Stripe a été appelée une fois avec les paramètres.
-        verify(Subscription, times(1)).create(params);
-        // Vérification que l'objet retourné est le mock de Subscription.
-        assertEquals(stripeSubscription, result);
+            // THEN : Vérification que la méthode Subscription.create de Stripe a été
+            // appelée une fois avec les paramètres.
+            mockedStaticSubscription.verify(() -> Subscription.create(params), times(1));
+            // Vérification que l'objet retourné est le mock de Subscription.
+            assertEquals(stripeSubscription, result);
+        }
     }
 
     // Test pour vérifier la création d'une charge via StripeClient.
@@ -78,16 +83,14 @@ import static org.mockito.Mockito.when;
         params.put("currency", "eur");
         params.put("customer", "cus_456");
 
-        // Configuration du mock stripeCharge pour retourner un objet lorsqu'il est créé.
-        when(Charge.create(any(Map.class))).thenReturn(stripeCharge);
+        try (MockedStatic<Charge> mockedStaticCharge = Mockito.mockStatic(Charge.class)) {
+            when(Charge.create(any(Map.class))).thenReturn(stripeCharge);
 
-        // WHEN : Appel de la méthode createCharge de StripeClient.
-        Charge result = stripeClient.createCharge(params);
+            Charge result = stripeClient.createCharge(params);
 
-        // THEN : Vérification que la méthode Charge.create de Stripe a été appelée une fois avec les paramètres.
-        verify(Charge, times(1)).create(params);
-        // Vérification que l'objet retourné est le mock de Charge.
-        assertEquals(stripeCharge, result);
+            mockedStaticCharge.verify(() -> Charge.create(params), times(1));
+            assertEquals(stripeCharge, result);
+        }
     }
 
     // Test pour vérifier la création d'une facture via StripeClient.
@@ -98,16 +101,14 @@ import static org.mockito.Mockito.when;
                 .setCustomer("cus_789")
                 .build();
 
-        // Configuration du mock stripeInvoice pour retourner un objet lorsqu'il est créé.
-        when(Invoice.create(any(InvoiceCreateParams.class))).thenReturn(stripeInvoice);
+        try (MockedStatic<Invoice> mockedStaticInvoice = Mockito.mockStatic(Invoice.class)) {
+            when(Invoice.create(any(InvoiceCreateParams.class))).thenReturn(stripeInvoice);
 
-        // WHEN : Appel de la méthode createInvoice de StripeClient.
-        Invoice result = stripeClient.createInvoice(params);
+            Invoice result = stripeClient.createInvoice(params);
 
-        // THEN : Vérification que la méthode Invoice.create de Stripe a été appelée une fois avec les paramètres.
-        verify(Invoice, times(1)).create(params);
-        // Vérification que l'objet retourné est le mock de Invoice.
-        assertEquals(stripeInvoice, result);
+            mockedStaticInvoice.verify(() -> Invoice.create(params), times(1));
+            assertEquals(stripeInvoice, result);
+        }
     }
 
     // Test pour vérifier la création d'un remboursement via StripeClient.
@@ -119,15 +120,13 @@ import static org.mockito.Mockito.when;
                 .setReason(RefundCreateParams.Reason.REQUESTED_BY_CUSTOMER)
                 .build();
 
-        // Configuration du mock stripeRefund pour retourner un objet lorsqu'il est créé.
-        when(Refund.create(any(RefundCreateParams.class))).thenReturn(stripeRefund);
+        try (MockedStatic<Refund> mockedStaticRefund = Mockito.mockStatic(Refund.class)) {
+            when(Refund.create(any(RefundCreateParams.class))).thenReturn(stripeRefund);
 
-        // WHEN : Appel de la méthode createRefund de StripeClient.
-        Refund result = stripeClient.createRefund(params);
+            Refund result = stripeClient.createRefund(params);
 
-        // THEN : Vérification que la méthode Refund.create de Stripe a été appelée une fois avec les paramètres.
-        verify(Refund, times(1)).create(params);
-        // Vérification que l'objet retourné est le mock de Refund.
-        assertEquals(stripeRefund, result);
+            mockedStaticRefund.verify(() -> Refund.create(params), times(1));
+            assertEquals(stripeRefund, result);
+        }
     }
 }
