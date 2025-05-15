@@ -11,7 +11,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import static com.videoflix.subscriptions_microservice.config.RabbitMQConfig.NEW_SUBSCRIPTION_EXCHANGE;
@@ -48,15 +47,15 @@ class NewSubscriptionEventPublisherTest {
                 NewSubscriptionCreatedEvent event = new NewSubscriptionCreatedEvent(
                                 123L, // userId
                                 "PREMIUM", // subscriptionLevelName
-                                LocalDate.now(), // startDate
-                                LocalDate.now().plusMonths(1), // endDate
+                                LocalDateTime.now(), // startDate
+                                LocalDateTime.now().plusMonths(1), // endDate
                                 LocalDateTime.now() // createdAt
                 );
 
                 // AND : Configuration de l'ObjectMapper pour retourner une chaîne JSON lors de
                 // la sérialisation de l'événement
                 String expectedMessage = "{\"userId\":123,\"subscriptionLevelName\":\"PREMIUM\",\"startDate\":\""
-                                + LocalDate.now() + "\",\"endDate\":\"" + LocalDate.now().plusMonths(1)
+                                + LocalDateTime.now() + "\",\"endDate\":\"" + LocalDateTime.now().plusMonths(1)
                                 + "\",\"createdAt\":\"" + LocalDateTime.now() + "\"}";
                 org.mockito.Mockito.when(objectMapper.writeValueAsString(event)).thenReturn(expectedMessage);
 
@@ -87,8 +86,8 @@ class NewSubscriptionEventPublisherTest {
                 NewSubscriptionCreatedEvent event = new NewSubscriptionCreatedEvent(
                                 456L,
                                 "BASIC",
-                                LocalDate.now(),
-                                LocalDate.now().plusWeeks(1),
+                                LocalDateTime.now(),
+                                LocalDateTime.now().plusWeeks(1),
                                 LocalDateTime.now());
 
                 // AND : Configuration de l'ObjectMapper pour lancer une exception lors de la
@@ -124,13 +123,13 @@ class NewSubscriptionEventPublisherTest {
                 NewSubscriptionCreatedEvent event = new NewSubscriptionCreatedEvent(
                                 789L,
                                 "STANDARD",
-                                LocalDate.now(),
-                                LocalDate.now().plusMonths(3),
+                                LocalDateTime.now(),
+                                LocalDateTime.now().plusMonths(3),
                                 LocalDateTime.now());
 
                 // AND : Configuration de l'ObjectMapper pour retourner une chaîne JSON
                 String expectedMessage = "{\"userId\":789,\"subscriptionLevelName\":\"STANDARD\",\"startDate\":\""
-                                + LocalDate.now() + "\",\"endDate\":\"" + LocalDate.now().plusMonths(3)
+                                + LocalDateTime.now() + "\",\"endDate\":\"" + LocalDateTime.now().plusMonths(3)
                                 + "\",\"createdAt\":\"" + LocalDateTime.now() + "\"}";
                 org.mockito.Mockito.when(objectMapper.writeValueAsString(event)).thenReturn(expectedMessage);
 

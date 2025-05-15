@@ -40,11 +40,9 @@ public class PaymentFailedEventPublisher {
         try {
             Map<String, Object> payload = new HashMap<>();
             payload.put("subscriptionId", subscription.getId());
-            // Retrieve user ID from Stripe Subscription's customer
             String customerId = subscription.getCustomer();
+
             if (customerId != null) {
-                // You'll need to implement a method to find user by Stripe customer ID
-                // This might involve a service or repository call
                 User user = findUserByStripeCustomerId(customerId);
                 if (user != null) {
                     payload.put(USER_ID_KEY, user.getId());
@@ -57,6 +55,7 @@ public class PaymentFailedEventPublisher {
                         subscription.getId());
                 payload.put(USER_ID_KEY, null);
             }
+
             payload.put("failureTimestamp", java.time.LocalDateTime.now().toString());
             payload.put("failureReason", failureReason);
             payload.put("nextRetryDate",

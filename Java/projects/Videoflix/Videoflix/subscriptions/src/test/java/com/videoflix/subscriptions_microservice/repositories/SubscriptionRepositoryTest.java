@@ -1,6 +1,5 @@
 package com.videoflix.subscriptions_microservice.repositories;
 
-import com.stripe.model.StripeObject;
 import com.videoflix.subscriptions_microservice.entities.Subscription;
 import com.videoflix.subscriptions_microservice.entities.Subscription.SubscriptionStatus;
 import com.videoflix.subscriptions_microservice.entities.User;
@@ -577,13 +576,12 @@ class SubscriptionRepositoryTest {
                 entityManager.flush();
 
                 // WHEN : Recherche par ID Stripe.
-                Optional<StripeObject> foundStripeObject = subscriptionRepository
+                Optional<Subscription> foundSubscription = subscriptionRepository
                                 .findByStripeSubscriptionId(stripeSubscriptionId);
 
-                // THEN : Vérification que l'Optional est vide car le repository est configuré
-                // pour l'entité Subscription, pas StripeObject. On teste principalement que la
-                // méthode existe et peut être appelée.
-                assertTrue(foundStripeObject.isEmpty());
+                // THEN : Vérification que l'abonnement est trouvé et correspond à celui créé
+                assertTrue(foundSubscription.isPresent());
+                assertEquals(subscription, foundSubscription.get());
         }
 
         // Test pour vérifier la méthode findByEndDateBeforeAndStatusIn.

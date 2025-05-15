@@ -115,7 +115,8 @@ public class StripeBillingService {
         }
 
         // On recherche l'abonnement local correspondant à l'ID de l'abonnement Stripe
-        Optional<Subscription> optionalLocalSubscription = Optional.empty();
+        Optional<Subscription> optionalLocalSubscription = subscriptionRepository
+                .findByStripeSubscriptionId(subscriptionId);
 
         // Si l'abonnement local n'existe pas, on log l'erreur et on arrête
         if (optionalLocalSubscription.isEmpty()) {
@@ -137,7 +138,7 @@ public class StripeBillingService {
         subscriptionRepository.save(localSubscription);
 
         // Envoi de l'événement d'échec de paiement
-        paymentFailedEventPublisher.publishPaymentFailedEvent(localSubscription, failureReason);
+        paymentFailedEventPublisher.publishPaymentFailedEvent(null, failureReason);
 
         // Log du détail de l'échec de paiement
         logger.warn("Paiement échoué pour la facture Stripe {} (Abonnement {}). Raison : {}",

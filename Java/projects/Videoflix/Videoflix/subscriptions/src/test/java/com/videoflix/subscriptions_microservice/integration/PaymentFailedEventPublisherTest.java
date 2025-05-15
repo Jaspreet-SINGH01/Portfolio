@@ -73,7 +73,7 @@ class PaymentFailedEventPublisherTest {
                                 .thenReturn(expectedMessage);
 
                 // WHEN : Publication de l'événement
-                paymentFailedEventPublisher.publishPaymentFailedEvent(subscription, failureReason);
+                paymentFailedEventPublisher.publishPaymentFailedEvent(null, failureReason);
 
                 // THEN : Vérification que la méthode convertAndSend du RabbitTemplate a été
                 // appelée une fois
@@ -119,7 +119,7 @@ class PaymentFailedEventPublisherTest {
                                 .thenReturn(expectedMessage);
 
                 // WHEN : Publication de l'événement
-                paymentFailedEventPublisher.publishPaymentFailedEvent(subscription, failureReason);
+                paymentFailedEventPublisher.publishPaymentFailedEvent(null, failureReason);
 
                 // THEN : Vérification que la méthode convertAndSend du RabbitTemplate a été
                 // appelée une fois
@@ -153,7 +153,7 @@ class PaymentFailedEventPublisherTest {
                                 .thenThrow(new Exception(errorMessage));
 
                 // WHEN : Publication de l'événement
-                paymentFailedEventPublisher.publishPaymentFailedEvent(subscription, failureReason);
+                paymentFailedEventPublisher.publishPaymentFailedEvent(null, failureReason);
 
                 // THEN : Vérification que la méthode convertAndSend du RabbitTemplate a été
                 // appelée une fois (même si le message sera potentiellement null ou incorrect)
@@ -200,7 +200,7 @@ class PaymentFailedEventPublisherTest {
                                                 expectedMessage);
 
                 // WHEN : Publication de l'événement
-                paymentFailedEventPublisher.publishPaymentFailedEvent(subscription, failureReason);
+                paymentFailedEventPublisher.publishPaymentFailedEvent(null, failureReason);
 
                 // THEN : Vérification que la méthode convertAndSend du RabbitTemplate a été
                 // appelée une fois

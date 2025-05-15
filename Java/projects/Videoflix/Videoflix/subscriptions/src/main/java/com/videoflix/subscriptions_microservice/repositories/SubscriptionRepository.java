@@ -1,6 +1,5 @@
 package com.videoflix.subscriptions_microservice.repositories;
 
-import com.stripe.model.StripeObject;
 import com.videoflix.subscriptions_microservice.entities.Subscription;
 import com.videoflix.subscriptions_microservice.entities.Subscription.SubscriptionStatus;
 import com.videoflix.subscriptions_microservice.entities.User;
@@ -58,7 +57,7 @@ public interface SubscriptionRepository
 
         List<Subscription> findByNextBillingDate(LocalDateTime reminderDate);
 
-        Optional<StripeObject> findByStripeSubscriptionId(String stripeSubscriptionId);
+        Optional<Subscription> findByStripeSubscriptionId(String stripeSubscriptionId);
 
         Object findByEndDateBeforeAndStatusIn(LocalDateTime eq, List<Object> anyList);
 }

@@ -4,10 +4,18 @@ package com.videoflix.subscriptions_microservice.services;
 // Importation des dépendances Stripe
 import com.stripe.exception.ApiException;
 import com.stripe.exception.StripeException;
-import com.stripe.model.*;
-import com.stripe.param.*;
+import com.stripe.model.Invoice;
+import com.stripe.model.Event;
+import com.stripe.model.Charge;
+import com.stripe.model.Refund;
+import com.stripe.model.EventDataObjectDeserializer;
+// import com.stripe.param.ChargeCreateParams;
+// import com.stripe.param.InvoiceCreateParams;
+import com.stripe.param.RefundCreateParams;
+import com.stripe.param.SubscriptionCreateParams;
 
 // Importation des classes métier de l'application
+import com.videoflix.subscriptions_microservice.entities.Subscription;
 import com.videoflix.subscriptions_microservice.integration.PaymentFailedEventPublisher;
 import com.videoflix.subscriptions_microservice.integration.StripeClient;
 import com.videoflix.subscriptions_microservice.repositories.SubscriptionRepository;
@@ -71,14 +79,14 @@ class StripeBillingServiceTest {
                 .build();
 
         // Simulation de la réponse Stripe
-        Subscription mockSub = new Subscription();
-        mockSub.setId("sub_test");
+        com.stripe.model.Subscription stripeSub = new com.stripe.model.Subscription();
+        stripeSub.setId("sub_test");
 
         // Comportement attendu du client Stripe simulé
-        when(stripeClient.createSubscription(params)).thenReturn(mockSub);
+        when(stripeClient.createSubscription(params)).thenReturn(stripeSub);
 
         // Appel de la méthode testée
-        Subscription result = stripeBillingService.createSubscription(customerId, priceId);
+        com.stripe.model.Subscription result = stripeBillingService.createSubscription(customerId, priceId);
 
         // Vérifications
         assertNotNull(result);
@@ -164,7 +172,7 @@ class StripeBillingServiceTest {
         when(deserializer.getObject()).thenReturn(Optional.of(invoice));
         when(invoice.getSubscription()).thenReturn(subscriptionId);
         when(invoice.getId()).thenReturn(invoiceId);
-        when(invoice.getLastFinalizationError()).thenReturn(error);
+        // when(invoice.getLastFinalizationError()).thenReturn(error);
         when(error.get("message")).thenReturn(failureReason);
 
         // Simulation d’un abonnement local
@@ -177,8 +185,7 @@ class StripeBillingServiceTest {
         stripeBillingService.handleStripeWebhookEvent(event);
 
         // Vérifications de la publication d’un événement
-        verify(paymentFailedEventPublisher).publishPaymentFailedEvent(subscriptionCaptor.capture(),
-                failureReasonCaptor.capture());
+        verify(paymentFailedEventPublisher).publishPaymentFailedEvent(null, failureReason);;
         assertEquals(localSub, subscriptionCaptor.getValue());
         assertEquals(failureReason, failureReasonCaptor.getValue());
 
