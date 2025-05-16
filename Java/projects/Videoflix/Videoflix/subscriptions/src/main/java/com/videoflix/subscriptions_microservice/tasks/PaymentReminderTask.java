@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -33,7 +33,7 @@ public class PaymentReminderTask {
     // Planification de l'exécution de cette tâche tous les jours à 10h00 du matin
     @Scheduled(cron = "0 0 10 * * *")
     public void sendPaymentReminders() {
-        LocalDate reminderDate = LocalDate.now().plus(daysBeforeReminder, ChronoUnit.DAYS);
+        LocalDateTime reminderDate = LocalDateTime.now().plus(daysBeforeReminder, ChronoUnit.DAYS);
         List<Subscription> subscriptionsDueForReminder = subscriptionRepository.findByNextBillingDate(reminderDate);
 
         logger.info("Traitement de {} abonnements devant recevoir un rappel de paiement pour le {} (dans {} jours).",

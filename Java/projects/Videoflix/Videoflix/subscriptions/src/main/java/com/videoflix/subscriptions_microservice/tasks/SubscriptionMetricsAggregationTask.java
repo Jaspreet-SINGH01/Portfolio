@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,10 +28,10 @@ public class SubscriptionMetricsAggregationTask {
     // Planification de l'exécution de cette tâche tous les jours à 3h00 du matin
     @Scheduled(cron = "0 0 3 * * *")
     public void aggregateDailySubscriptionMetrics() {
-        LocalDate today = LocalDate.now();
-        LocalDate yesterday = today.minusDays(1);
-        LocalDateTime startOfYesterday = yesterday.atStartOfDay();
-        LocalDateTime endOfYesterday = today.atStartOfDay();
+        LocalDateTime today = LocalDateTime.now();
+        LocalDateTime yesterday = today.minusDays(1);
+        LocalDateTime startOfYesterday = yesterday.toLocalDate().atStartOfDay();
+        LocalDateTime endOfYesterday = today.toLocalDate().atStartOfDay().minusSeconds(1);
 
         logger.info("Début de l'agrégation des métriques d'abonnement pour le {}...", yesterday);
 
@@ -45,15 +44,15 @@ public class SubscriptionMetricsAggregationTask {
 
             // Nombre d'annulations hier
             long cancellations = subscriptionRepository.countByStatusAndCancellationDateBetween(
-                    Subscription.SubscriptionStatus.CANCELLED, startOfYesterday.toLocalDate(),
-                    endOfYesterday.toLocalDate());
+                    Subscription.SubscriptionStatus.CANCELLED, startOfYesterday,
+                    endOfYesterday);
             metricsService.recordDailyMetric("cancelled_subscriptions", yesterday, cancellations);
             logger.info("Nombre d'annulations pour le {} : {}", yesterday, cancellations);
 
             // Revenus générés hier
             List<Subscription> activeSubscriptionsYesterday = subscriptionRepository
                     .findByStatusAndLastPaymentDateBetween(Subscription.SubscriptionStatus.ACTIVE,
-                            startOfYesterday.toLocalDate().minusDays(31), endOfYesterday.toLocalDate()); // Ajuster la
+                            startOfYesterday.minusDays(31), endOfYesterday); // Ajuster la
                                                                                                          // période si
                                                                                                          // nécessaire
             double dailyRevenue = activeSubscriptionsYesterday.stream()

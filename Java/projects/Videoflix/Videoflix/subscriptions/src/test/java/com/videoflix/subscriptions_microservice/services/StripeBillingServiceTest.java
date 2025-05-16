@@ -9,8 +9,6 @@ import com.stripe.model.Event;
 import com.stripe.model.Charge;
 import com.stripe.model.Refund;
 import com.stripe.model.EventDataObjectDeserializer;
-// import com.stripe.param.ChargeCreateParams;
-// import com.stripe.param.InvoiceCreateParams;
 import com.stripe.param.RefundCreateParams;
 import com.stripe.param.SubscriptionCreateParams;
 
@@ -172,7 +170,6 @@ class StripeBillingServiceTest {
         when(deserializer.getObject()).thenReturn(Optional.of(invoice));
         when(invoice.getSubscription()).thenReturn(subscriptionId);
         when(invoice.getId()).thenReturn(invoiceId);
-        // when(invoice.getLastFinalizationError()).thenReturn(error);
         when(error.get("message")).thenReturn(failureReason);
 
         // Simulation d’un abonnement local
@@ -185,7 +182,7 @@ class StripeBillingServiceTest {
         stripeBillingService.handleStripeWebhookEvent(event);
 
         // Vérifications de la publication d’un événement
-        verify(paymentFailedEventPublisher).publishPaymentFailedEvent(null, failureReason);;
+        verify(paymentFailedEventPublisher).publishPaymentFailedEvent(null, failureReason);
         assertEquals(localSub, subscriptionCaptor.getValue());
         assertEquals(failureReason, failureReasonCaptor.getValue());
 

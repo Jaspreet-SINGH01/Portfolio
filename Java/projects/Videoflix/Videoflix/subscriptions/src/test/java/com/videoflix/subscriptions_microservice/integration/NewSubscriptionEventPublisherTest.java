@@ -2,6 +2,12 @@ package com.videoflix.subscriptions_microservice.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.videoflix.subscriptions_microservice.events.NewSubscriptionCreatedEvent;
+import com.videoflix.subscriptions_microservice.entities.User;
+import com.videoflix.subscriptions_microservice.entities.Subscription.SubscriptionStatus;
+import com.videoflix.subscriptions_microservice.entities.Subscription;
+import com.videoflix.subscriptions_microservice.entities.SubscriptionLevel;
+import com.videoflix.subscriptions_microservice.entities.SubscriptionLevel.Level;
+import com.videoflix.subscriptions_microservice.entities.SubscriptionLevel.BillingFrequency;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -44,13 +50,24 @@ class NewSubscriptionEventPublisherTest {
         @Test
         void publishNewSubscriptionEvent_shouldPublishCorrectly() throws Exception {
                 // GIVEN : Un événement de nouvelle souscription à publier
-                NewSubscriptionCreatedEvent event = new NewSubscriptionCreatedEvent(
-                                123L, // userId
-                                "PREMIUM", // subscriptionLevelName
-                                LocalDateTime.now(), // startDate
-                                LocalDateTime.now().plusMonths(1), // endDate
-                                LocalDateTime.now() // createdAt
-                );
+                User user = new User();
+                user.setId(123L);
+
+                Subscription subscription = new Subscription();
+                SubscriptionLevel subscriptionLevel = new SubscriptionLevel();
+                subscriptionLevel.setLevel(Level.PREMIUM);
+                subscriptionLevel.setPrice(9.99);
+                subscriptionLevel.setFeatures("Feature 1, Feature 2, Feature 3");
+                subscriptionLevel.setDescription("Premium subscription with all features");
+                subscriptionLevel.setBillingFrequency(BillingFrequency.MONTHLY);
+                subscriptionLevel.setStripePriceId("price_123");
+                subscription.setSubscriptionLevel(subscriptionLevel);
+                subscription.setStartDate(LocalDateTime.now());
+                subscription.setEndDate(LocalDateTime.now().plusMonths(1));
+                subscription.setCreationTimestamp(LocalDateTime.now());
+                subscription.setStatus(SubscriptionStatus.ACTIVE);
+
+                NewSubscriptionCreatedEvent event = new NewSubscriptionCreatedEvent(this, user, subscription);
 
                 // AND : Configuration de l'ObjectMapper pour retourner une chaîne JSON lors de
                 // la sérialisation de l'événement
@@ -83,12 +100,24 @@ class NewSubscriptionEventPublisherTest {
         @Test
         void publishNewSubscriptionEvent_shouldHandleSerializationException() throws Exception {
                 // GIVEN : Un événement de nouvelle souscription à publier
+                User user = new User();
+                user.setId(456L);
+                user.setUsername("testuser");
+                user.setEmail("test@example.com");
+                user.setPassword("password");
+                user.setFirstname("Test");
+                user.setLastname("User");
+
+                Subscription subscription = new Subscription();
+                subscription.setUser(user);
+                subscription.setStartDate(LocalDateTime.now());
+                subscription.setEndDate(LocalDateTime.now().plusWeeks(1));
+                subscription.setStatus(SubscriptionStatus.ACTIVE);
+
                 NewSubscriptionCreatedEvent event = new NewSubscriptionCreatedEvent(
-                                456L,
-                                "BASIC",
-                                LocalDateTime.now(),
-                                LocalDateTime.now().plusWeeks(1),
-                                LocalDateTime.now());
+                                this, // source can be any object, using 'this' as example
+                                user,
+                                subscription);
 
                 // AND : Configuration de l'ObjectMapper pour lancer une exception lors de la
                 // sérialisation
@@ -120,12 +149,19 @@ class NewSubscriptionEventPublisherTest {
         @Test
         void publishNewSubscriptionEvent_shouldHandleRabbitTemplateException() throws Exception {
                 // GIVEN : Un événement de nouvelle souscription à publier
-                NewSubscriptionCreatedEvent event = new NewSubscriptionCreatedEvent(
-                                789L,
-                                "STANDARD",
-                                LocalDateTime.now(),
-                                LocalDateTime.now().plusMonths(3),
-                                LocalDateTime.now());
+                User user = new User();
+                user.setId(789L);
+
+                SubscriptionLevel subscriptionLevel = new SubscriptionLevel();
+                subscriptionLevel.setLevel(SubscriptionLevel.Level.PREMIUM);
+
+                Subscription subscription = new Subscription();
+                subscription.setSubscriptionLevel(subscriptionLevel);
+                subscription.setStartDate(LocalDateTime.now());
+                subscription.setEndDate(LocalDateTime.now().plusMonths(3));
+                subscription.setCreationTimestamp(LocalDateTime.now());
+
+                NewSubscriptionCreatedEvent event = new NewSubscriptionCreatedEvent(this, user, subscription);
 
                 // AND : Configuration de l'ObjectMapper pour retourner une chaîne JSON
                 String expectedMessage = "{\"userId\":789,\"subscriptionLevelName\":\"STANDARD\",\"startDate\":\""

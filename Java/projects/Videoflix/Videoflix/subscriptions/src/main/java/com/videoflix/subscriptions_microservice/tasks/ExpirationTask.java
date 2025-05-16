@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -29,7 +29,7 @@ public class ExpirationTask {
     @Scheduled(cron = "0 0 3 * * *")
     @Transactional
     public void processExpiredSubscriptions() {
-        LocalDate today = LocalDate.now();
+        LocalDateTime today = LocalDateTime.now();
         List<Subscription> expiringToday = subscriptionRepository.findByEndDate(today);
         List<Subscription> alreadyExpired = subscriptionRepository.findByEndDateBeforeAndStatusNot(today,
                 Subscription.SubscriptionStatus.EXPIRED);

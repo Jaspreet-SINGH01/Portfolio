@@ -23,9 +23,6 @@ import static org.mockito.Mockito.*;
 class InactiveSubscriptionCleanupJobConfigTest {
 
     @Autowired
-    private Job cleanupInactiveSubscriptionsJob;
-
-    @Autowired
     private JobLauncherTestUtils jobLauncherTestUtils;
 
     @Mock

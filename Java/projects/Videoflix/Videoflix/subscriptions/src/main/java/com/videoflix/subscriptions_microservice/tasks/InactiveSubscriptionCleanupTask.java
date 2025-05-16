@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.List;
 
@@ -36,14 +36,14 @@ public class InactiveSubscriptionCleanupTask {
     @Scheduled(cron = "0 0 5 * * *")
     @Transactional
     public void cleanupInactiveSubscriptions() {
-        LocalDate archiveThreshold = LocalDate.now().minus(cancelledRetentionPeriod);
-        LocalDate deletionThreshold = LocalDate.now().minus(inactiveDeletionPeriod);
+        LocalDateTime archiveThreshold = LocalDateTime.now().minus(cancelledRetentionPeriod);
+        LocalDateTime deletionThreshold = LocalDateTime.now().minus(inactiveDeletionPeriod);
 
         archiveCancelledSubscriptions(archiveThreshold);
         deleteOldInactiveSubscriptions(deletionThreshold);
     }
 
-    private void archiveCancelledSubscriptions(LocalDate archiveThreshold) {
+    private void archiveCancelledSubscriptions(LocalDateTime archiveThreshold) {
         List<Subscription> cancelledSubscriptions = subscriptionRepository
                 .findByStatusAndCancellationDateBefore(Subscription.SubscriptionStatus.CANCELLED, archiveThreshold);
 
@@ -61,7 +61,7 @@ public class InactiveSubscriptionCleanupTask {
         }
     }
 
-    private void deleteOldInactiveSubscriptions(LocalDate deletionThreshold) {
+    private void deleteOldInactiveSubscriptions(LocalDateTime deletionThreshold) {
         List<Subscription> oldInactiveSubscriptions = subscriptionRepository
                 .findInactiveBefore(deletionThreshold);
 

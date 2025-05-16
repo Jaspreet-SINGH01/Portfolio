@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,8 +29,9 @@ public class SubscriptionMetricsService {
      * @param date       La date à laquelle la métrique se rapporte.
      * @param value      La valeur de la métrique.
      */
-    public void recordDailyMetric(String metricName, LocalDate date, Number value) {
-        dailyMetrics.compute(date, (key, existingMetrics) -> {
+    public void recordDailyMetric(String metricName, LocalDateTime date, Number value) {
+        LocalDate dateKey = date.toLocalDate();
+        dailyMetrics.compute(dateKey, (key, existingMetrics) -> {
             Map<String, Number> metrics = (existingMetrics == null) ? new HashMap<>() : existingMetrics;
             metrics.put(metricName, value);
             logger.debug("Métrique '{}' enregistrée pour le {} avec la valeur: {}", metricName, date, value);

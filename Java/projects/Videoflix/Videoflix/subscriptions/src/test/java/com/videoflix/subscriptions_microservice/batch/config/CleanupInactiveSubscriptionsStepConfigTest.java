@@ -18,6 +18,7 @@ import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.repository.support.JobRepositoryFactoryBean;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.item.Chunk;
 import org.springframework.batch.test.JobLauncherTestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,7 +26,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionManager;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -43,9 +43,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class CleanupInactiveSubscriptionsStepConfigTest {
 
     @Autowired
-    private Step cleanupInactiveSubscriptionsStep;
-
-    @Autowired
     private SubscriptionRepository subscriptionRepository;
 
     @Autowired
@@ -55,16 +52,13 @@ class CleanupInactiveSubscriptionsStepConfigTest {
     private InactiveSubscriptionWriter inactiveSubscriptionWriter;
 
     @Autowired
-    private InactiveSubscriptionReader inactiveSubscriptionReader;
-
-    @Autowired
     private CleanupInactiveSubscriptionsStepConfig config;
 
     @Autowired
     private JobRepository jobRepository;
 
     @Autowired
-    private TransactionManager transactionManager;
+    private PlatformTransactionManager transactionManager;
 
     @BeforeEach
     void setUp() {
@@ -76,6 +70,7 @@ class CleanupInactiveSubscriptionsStepConfigTest {
                 inactiveSubscriptionWriter);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void cleanupInactiveSubscriptionsStep_shouldReadProcessAndWriteInactiveSubscriptions() throws Exception {
         LocalDateTime cutoffDate = LocalDateTime.now().minus(90, ChronoUnit.DAYS);
@@ -105,9 +100,8 @@ class CleanupInactiveSubscriptionsStepConfigTest {
         verify(subscriptionRepository, times(1)).findByEndDateBeforeAndStatusIn(eq(cutoffDate), anyList());
         verify(inactiveSubscriptionProcessor, times(inactiveSubscriptions.size())).process(any(Subscription.class));
 
-        @SuppressWarnings("unchecked")
         ArgumentCaptor<List<Subscription>> subscriptionCaptor = ArgumentCaptor.forClass(List.class);
-        verify(inactiveSubscriptionWriter).write(subscriptionCaptor.capture());
+        verify(inactiveSubscriptionWriter).write((Chunk<? extends Subscription>) subscriptionCaptor.capture());
         assertEquals(inactiveSubscriptions.size(), subscriptionCaptor.getValue().size());
         assertTrue(subscriptionCaptor.getValue().containsAll(inactiveSubscriptions));
     }
@@ -146,12 +140,6 @@ class CleanupInactiveSubscriptionsStepConfigTest {
         @Bean
         public InactiveSubscriptionWriter inactiveSubscriptionWriter() {
             return mock(InactiveSubscriptionWriter.class);
-        }
-
-        @Bean
-        public InactiveSubscriptionReader inactiveSubscriptionReader(SubscriptionRepository subscriptionRepository) {
-            LocalDateTime cutoffDate = LocalDateTime.now().minus(90, ChronoUnit.DAYS);
-            return new InactiveSubscriptionReader(subscriptionRepository, cutoffDate);
         }
 
         @Bean
