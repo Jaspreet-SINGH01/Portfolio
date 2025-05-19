@@ -1,4 +1,3 @@
-// Définition du package de test
 package com.videoflix.subscriptions_microservice.services;
 
 // Importation des dépendances Stripe

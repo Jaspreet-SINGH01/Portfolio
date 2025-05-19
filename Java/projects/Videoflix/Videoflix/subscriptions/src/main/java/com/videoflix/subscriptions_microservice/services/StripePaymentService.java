@@ -53,7 +53,7 @@ public class StripePaymentService {
             Payment payment = new Payment();
             payment.setSubscription(subscription);
             payment.setPaymentDate(LocalDateTime.now());
-            payment.setAmount(10.0); // Remplacez par le montant réel
+            payment.setAmount(10.0);
             payment.setPaymentId(stripeSubscription.getId());
             payment.setStatus(Payment.PaymentStatus.SUCCESS);
             paymentRepository.save(payment);
@@ -66,7 +66,7 @@ public class StripePaymentService {
             Payment payment = new Payment();
             payment.setSubscription(subscription);
             payment.setPaymentDate(LocalDateTime.now());
-            payment.setAmount(10.0); // Remplacez par le montant réel
+            payment.setAmount(10.0);
             payment.setPaymentId(null);
             payment.setStatus(Payment.PaymentStatus.FAILED);
             payment.setErrorMessage(e.getMessage());
@@ -93,7 +93,7 @@ public class StripePaymentService {
             Payment payment = new Payment();
             payment.setSubscription(subscription);
             payment.setPaymentDate(LocalDateTime.now());
-            payment.setAmount(10.0); // Remplacez par le montant réel
+            payment.setAmount(10.0);
             payment.setPaymentId(stripeSubscription.getId());
             payment.setStatus(Payment.PaymentStatus.SUCCESS);
             paymentRepository.save(payment);
@@ -106,7 +106,7 @@ public class StripePaymentService {
             Payment payment = new Payment();
             payment.setSubscription(subscription);
             payment.setPaymentDate(LocalDateTime.now());
-            payment.setAmount(10.0); // Remplacez par le montant réel
+            payment.setAmount(10.0); //
             payment.setPaymentId(null);
             payment.setStatus(Payment.PaymentStatus.FAILED);
             payment.setErrorMessage(e.getMessage());
