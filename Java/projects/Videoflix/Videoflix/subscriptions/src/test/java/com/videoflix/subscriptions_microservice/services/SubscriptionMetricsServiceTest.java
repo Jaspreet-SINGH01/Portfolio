@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class SubscriptionMetricsServiceTest {
+    private static final String NEW_SUBSCRIPTIONS = "new_subscriptions";
 
     private SubscriptionMetricsService metricsService;
 
@@ -24,7 +25,7 @@ class SubscriptionMetricsServiceTest {
     @Test
     void testRecordDailyMetric() {
         // Given
-        String metricName = "new_subscriptions";
+        String metricName = NEW_SUBSCRIPTIONS;
         LocalDateTime now = LocalDateTime.now();
         Integer value = 10;
 
@@ -43,14 +44,14 @@ class SubscriptionMetricsServiceTest {
         LocalDate today = now.toLocalDate();
 
         // When
-        metricsService.recordDailyMetric("new_subscriptions", now, 10);
+        metricsService.recordDailyMetric(NEW_SUBSCRIPTIONS, now, 10);
         metricsService.recordDailyMetric("daily_revenue", now, 1500.50);
         metricsService.recordDailyMetric("cancelled_subscriptions", now, 2);
 
         // Then
         Map<String, Number> todayMetrics = metricsService.getDailyMetrics(today);
         assertEquals(3, todayMetrics.size());
-        assertEquals(10, todayMetrics.get("new_subscriptions"));
+        assertEquals(10, todayMetrics.get(NEW_SUBSCRIPTIONS));
         assertEquals(1500.50, todayMetrics.get("daily_revenue"));
         assertEquals(2, todayMetrics.get("cancelled_subscriptions"));
     }
@@ -58,7 +59,7 @@ class SubscriptionMetricsServiceTest {
     @Test
     void testUpdateExistingMetric() {
         // Given
-        String metricName = "new_subscriptions";
+        String metricName = NEW_SUBSCRIPTIONS;
         LocalDateTime now = LocalDateTime.now();
 
         // When
@@ -104,14 +105,14 @@ class SubscriptionMetricsServiceTest {
         LocalDateTime tomorrow = today.plusDays(1);
 
         // When
-        metricsService.recordDailyMetric("new_subscriptions", today, 10);
-        metricsService.recordDailyMetric("new_subscriptions", yesterday, 5);
-        metricsService.recordDailyMetric("new_subscriptions", tomorrow, 15);
+        metricsService.recordDailyMetric(NEW_SUBSCRIPTIONS, today, 10);
+        metricsService.recordDailyMetric(NEW_SUBSCRIPTIONS, yesterday, 5);
+        metricsService.recordDailyMetric(NEW_SUBSCRIPTIONS, tomorrow, 15);
 
         // Then
-        assertEquals(10, metricsService.getDailyMetric("new_subscriptions", today.toLocalDate()));
-        assertEquals(5, metricsService.getDailyMetric("new_subscriptions", yesterday.toLocalDate()));
-        assertEquals(15, metricsService.getDailyMetric("new_subscriptions", tomorrow.toLocalDate()));
+        assertEquals(10, metricsService.getDailyMetric(NEW_SUBSCRIPTIONS, today.toLocalDate()));
+        assertEquals(5, metricsService.getDailyMetric(NEW_SUBSCRIPTIONS, yesterday.toLocalDate()));
+        assertEquals(15, metricsService.getDailyMetric(NEW_SUBSCRIPTIONS, tomorrow.toLocalDate()));
     }
 
     @Test
