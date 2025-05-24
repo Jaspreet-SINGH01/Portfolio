@@ -26,7 +26,7 @@ public class WelcomeEmailTask {
     private final AdminNotificationService adminNotificationService;
     private final FailedEmailRepository failedEmailRepository;
 
-    private static final int MAX_RETRIES = 3;
+    static final int MAX_RETRIES = 3;
     private static final long BACKOFF_DELAY = 5000;
 
     public WelcomeEmailTask(NotificationService notificationService, FailedEmailRepository failedEmailRepository,
