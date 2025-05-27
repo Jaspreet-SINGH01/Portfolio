@@ -1,13 +1,678 @@
-9. Tests :
+Excellent choix ! Le microservice `content` est absolument essentiel pour une plateforme comme Videoflix. C'est lui qui va gérer le catalogue de films, séries, documentaires, etc.
 
-Tests unitaires : Écrire des tests unitaires pour chaque composant du microservice.
-Tests d'intégration : Écrire des tests d'intégration pour tester la communication entre les différents composants du microservice.
+Voici un guide étape par étape sur la façon de s'y prendre pour créer le microservice `content`, en se basant sur les bonnes pratiques de Spring Boot et des microservices :
 
+---
 
+### **Étape 1 : Initialisation du Projet Spring Boot**
 
+Comme pour vos autres microservices, commencez par créer un nouveau projet Spring Boot.
 
-10. Documentation :
+1.  **Générateur Spring Initializr :**
+    * Allez sur [start.spring.io](https://start.spring.io/).
+    * **Project :** Maven Project ou Gradle Project (selon votre préférence, restez cohérent avec les autres microservices).
+    * **Language :** Java
+    * **Spring Boot :** La version stable la plus récente.
+    * **Group :** `com.videoflix` (ou votre package racine)
+    * **Artifact :** `content-microservice` (ou `content-service`)
+    * **Name :** `content-microservice`
+    * **Package Name :** `com.videoflix.content`
+    * **Java :** Votre version de Java (ex: 17, 21).
 
-Documentation de l'API : Documenter les API publiques du microservice.
-Documentation pour les développeurs : Fournir une documentation pour les développeurs qui souhaitent intégrer les abonnements avec d'autres applications.
-Documentation de l'API (Swagger/OpenAPI) : Générer une documentation pour que les autres services et les clients puissent comprendre comment utiliser votre API.
+2.  **Dépendances (Ajoutez celles-ci pour commencer) :**
+    * **Spring Web :** Pour créer des API REST.
+    * **Spring Data JPA :** Pour l'accès à la base de données relationnelle.
+    * **H2 Database :** Une base de données en mémoire utile pour les tests et le développement local rapide. Vous la remplacerez par PostgreSQL ou MySQL en production.
+    * **Lombok :** Pour réduire le boilerplate code (constructeurs, getters/setters, etc.).
+    * **Validation :** Pour la validation des DTOs d'entrée.
+    * **Spring Boot DevTools :** Pour le rechargement à chaud en développement.
+    * **Spring AMQP :** Si le service `content` doit publier des événements vers RabbitMQ (ex: `ContentAddedEvent`, `ContentUpdatedEvent`).
+
+3.  **Générer le Projet :** Cliquez sur "Generate" et décompressez l'archive dans votre espace de travail.
+
+---
+
+### **Étape 2 : Conception des Entités (Modèle de Données)**
+
+Réfléchissez aux informations que vous devez stocker pour chaque contenu.
+
+1.  **Entité `Content` (ou `Movie`, `Series`, `Episode`) :**
+    * ID (identifiant unique, `Long` ou `UUID`)
+    * Titre (`String`)
+    * Description (`String`)
+    * Date de sortie (`LocalDate`)
+    * Durée (`Integer` en minutes ou `Duration`)
+    * URL de la jaquette/poster (`String`)
+    * URL de la bande-annonce (`String`)
+    * Statut (`Enum` : `DRAFT`, `PUBLISHED`, `ARCHIVED`, `UPCOMING`)
+    * Classification (`Enum` : `G`, `PG`, `PG-13`, `R`, `NC-17` ou équivalent local)
+    * Date de création / dernière mise à jour (`LocalDateTime`)
+
+2.  **Entité `Genre` :**
+    * ID
+    * Nom (`String` : "Action", "Comédie", "Drame", etc.)
+    * Description (optionnel)
+    * **Relation :** Un `Content` peut avoir plusieurs `Genre`s (Many-to-Many).
+
+3.  **Entité `Actor` / `Director` (ou `Person`) :**
+    * ID
+    * Nom (`String`)
+    * Date de naissance, biographie (optionnel)
+    * **Relation :** Un `Content` peut avoir plusieurs `Actor`s (Many-to-Many). Un `Content` peut avoir plusieurs `Director`s (Many-to-Many ou Many-to-One si un seul réalisateur principal). Vous pouvez les combiner en une seule entité `Person` avec un rôle (`Enum : ACTOR, DIRECTOR`).
+
+4.  **Entité `Series` et `Episode` (si vous gérez des séries TV) :**
+    * **`Series` :** Titre, description, jaquette, etc. (similaire à `Content` mais pour la série entière).
+    * **`Season` :** Numéro de saison, titre, année.
+    * **`Episode` :** Numéro d'épisode, titre, description, durée, URL de la vignette.
+    * **Relations :** `Series` a plusieurs `Season`s, `Season` a plusieurs `Episode`s. `Episode` a des `Genre`s, `Actor`s, `Director`s.
+
+5.  **Classes Enums :**
+    * `ContentType` (MOVIE, TV_SERIES, DOCUMENTARY)
+    * `ContentStatus` (DRAFT, PUBLISHED, ARCHIVED, UPCOMING)
+    * `Rating` (G, PG, etc.)
+    * `SubscriptionLevelRequired` (BASIC, STANDARD, PREMIUM - pour indiquer quel abonnement est requis pour voir le contenu)
+
+**Exemple d'entité `Content` :**
+
+```java
+package com.videoflix.content.entities;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Table(name = "contents")
+@Data // Lombok: génère getters, setters, equals, hashCode, toString
+@NoArgsConstructor // Lombok: génère un constructeur sans arguments
+@AllArgsConstructor // Lombok: génère un constructeur avec tous les arguments
+public class Content {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Column(columnDefinition = "TEXT") // Pour un texte plus long
+    private String description;
+
+    private LocalDate releaseDate;
+
+    private Integer durationMinutes; // Durée en minutes
+
+    private String posterUrl; // URL de l'image de la jaquette
+
+    private String trailerUrl; // URL de la bande-annonce
+
+    @Enumerated(EnumType.STRING) // Stocke le nom de l'enum en DB
+    @Column(nullable = false)
+    private ContentType type; // MOVIE, TV_SERIES, DOCUMENTARY
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ContentStatus status; // DRAFT, PUBLISHED, ARCHIVED, UPCOMING
+
+    @Enumerated(EnumType.STRING)
+    private Rating rating; // G, PG, R, etc.
+
+    @Enumerated(EnumType.STRING)
+    private SubscriptionLevelRequired minSubscriptionLevel; // BASIC, STANDARD, PREMIUM
+
+    @ManyToMany
+    @JoinTable(
+        name = "content_genres",
+        joinColumns = @JoinColumn(name = "content_id"),
+        inverseJoinColumns = @JoinColumn(name = "genre_id")
+    )
+    private Set<Genre> genres = new HashSet<>();
+
+    // Vous ajouteriez des relations pour les acteurs, réalisateurs ici aussi
+
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+}
+```
+
+---
+
+### **Étape 3 : Couche Repository**
+
+Créez des interfaces `JpaRepository` pour vos entités.
+
+```java
+package com.videoflix.content.repositories;
+
+import com.videoflix.content.entities.Content;
+import com.videoflix.content.enums.ContentStatus;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface ContentRepository extends JpaRepository<Content, Long> {
+    List<Content> findByStatus(ContentStatus status);
+    List<Content> findByGenres_Name(String genreName);
+    Optional<Content> findByTitle(String title);
+    // Ajoutez d'autres méthodes de recherche utiles
+}
+```
+Faites de même pour `GenreRepository`, `ActorRepository`, etc.
+
+---
+
+### **Étape 4 : Couche Service (Logique Métier)**
+
+Contient la logique métier pour manipuler les entités `Content`.
+
+```java
+package com.videoflix.content.services;
+
+import com.videoflix.content.entities.Content;
+import com.videoflix.content.enums.ContentStatus;
+import com.videoflix.content.repositories.ContentRepository;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+public class ContentService {
+
+    private final ContentRepository contentRepository;
+    // Injectez d'autres repositories si nécessaire (GenreRepository, etc.)
+    // private final GenreRepository genreRepository;
+
+    public ContentService(ContentRepository contentRepository) {
+        this.contentRepository = contentRepository;
+    }
+
+    @Transactional
+    public Content createContent(Content content) {
+        // Logique métier avant la sauvegarde (ex: validation plus poussée)
+        content.setStatus(ContentStatus.DRAFT); // Définit un statut initial
+        return contentRepository.save(content);
+    }
+
+    @Transactional(readOnly = true)
+    public Content getContentById(Long id) {
+        return contentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Contenu non trouvé avec l'ID: " + id));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Content> getAllPublishedContent() {
+        return contentRepository.findByStatus(ContentStatus.PUBLISHED);
+    }
+
+    @Transactional
+    public Content updateContent(Long id, Content updatedContent) {
+        Content existingContent = getContentById(id); // Récupère l'existant ou lance une exception
+        // Mettez à jour les propriétés de existingContent avec celles de updatedContent
+        existingContent.setTitle(updatedContent.getTitle());
+        existingContent.setDescription(updatedContent.setDescription());
+        existingContent.setReleaseDate(updatedContent.getReleaseDate());
+        existingContent.setDurationMinutes(updatedContent.getDurationMinutes());
+        existingContent.setPosterUrl(updatedContent.getPosterUrl());
+        existingContent.setTrailerUrl(updatedContent.getTrailerUrl());
+        existingContent.setType(updatedContent.getType());
+        existingContent.setRating(updatedContent.getRating());
+        existingContent.setMinSubscriptionLevel(updatedContent.getMinSubscriptionLevel());
+        // Gérez la mise à jour des genres, acteurs, etc. ici
+        return contentRepository.save(existingContent);
+    }
+
+    @Transactional
+    public void deleteContent(Long id) {
+        contentRepository.deleteById(id);
+    }
+
+    @Transactional
+    public Content publishContent(Long id) {
+        Content content = getContentById(id);
+        content.setStatus(ContentStatus.PUBLISHED);
+        return contentRepository.save(content);
+        // Vous pourriez déclencher un événement ici: ContentPublishedEvent
+    }
+
+    // Ajoutez des méthodes pour les séries/épisodes si vous les gérez
+}
+```
+
+---
+
+### **Étape 5 : Couche Contrôleur (API REST)**
+
+Exposez les fonctionnalités du service via des endpoints REST. Utilisez des DTOs pour la communication.
+
+1.  **DTOs (Data Transfer Objects) :**
+    * **`ContentRequest` :** Pour les requêtes de création/mise à jour (ex: `title`, `description`, `genreIds`).
+    * **`ContentResponse` :** Pour les réponses (ex: `id`, `title`, `description`, `genres`).
+
+    ```java
+    // Exemple de ContentRequest
+    package com.videoflix.content.dtos;
+
+    import com.videoflix.content.enums.ContentType;
+    import com.videoflix.content.enums.Rating;
+    import com.videoflix.content.enums.SubscriptionLevelRequired;
+    import jakarta.validation.constraints.NotBlank;
+    import jakarta.validation.constraints.NotNull;
+    import jakarta.validation.constraints.Positive;
+    import lombok.Data;
+
+    import java.time.LocalDate;
+    import java.util.Set;
+
+    @Data
+    public class ContentRequest {
+        @NotBlank(message = "Le titre est obligatoire")
+        private String title;
+        private String description;
+        private LocalDate releaseDate;
+        @Positive(message = "La durée doit être positive")
+        private Integer durationMinutes;
+        private String posterUrl;
+        private String trailerUrl;
+        @NotNull(message = "Le type de contenu est obligatoire")
+        private ContentType type;
+        private Rating rating;
+        private SubscriptionLevelRequired minSubscriptionLevel;
+        private Set<Long> genreIds; // Pour associer des genres existants
+        // Ajoutez les IDs d'acteurs/réalisateurs si nécessaire
+    }
+    ```
+
+    ```java
+    // Exemple de ContentResponse
+    package com.videoflix.content.dtos;
+
+    import com.videoflix.content.enums.ContentStatus;
+    import com.videoflix.content.enums.ContentType;
+    import com.videoflix.content.enums.Rating;
+    import com.videoflix.content.enums.SubscriptionLevelRequired;
+    import lombok.Data;
+
+    import java.time.LocalDate;
+    import java.time.LocalDateTime;
+    import java.util.Set;
+
+    @Data
+    public class ContentResponse {
+        private Long id;
+        private String title;
+        private String description;
+        private LocalDate releaseDate;
+        private Integer durationMinutes;
+        private String posterUrl;
+        private String trailerUrl;
+        private ContentType type;
+        private ContentStatus status;
+        private Rating rating;
+        private SubscriptionLevelRequired minSubscriptionLevel;
+        private Set<GenreResponse> genres; // DTO imbriqué pour les genres
+        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
+    }
+    ```
+
+2.  **`ContentController` :**
+
+    ```java
+    package com.videoflix.content.controllers;
+
+    import com.videoflix.content.dtos.ContentRequest;
+    import com.videoflix.content.dtos.ContentResponse;
+    import com.videoflix.content.entities.Content;
+    import com.videoflix.content.entities.Genre;
+    import com.videoflix.content.services.ContentService;
+    import com.videoflix.content.services.GenreService; // Supposons que vous avez un GenreService
+    import jakarta.validation.Valid;
+    import org.springframework.http.HttpStatus;
+    import org.springframework.http.ResponseEntity;
+    import org.springframework.web.bind.annotation.*;
+
+    import java.util.List;
+    import java.util.Set;
+    import java.util.stream.Collectors;
+
+    @RestController
+    @RequestMapping("/api/v1/content")
+    public class ContentController {
+
+        private final ContentService contentService;
+        private final GenreService genreService; // Injecter le service pour les genres
+
+        public ContentController(ContentService contentService, GenreService genreService) {
+            this.contentService = contentService;
+            this.genreService = genreService;
+        }
+
+        // Méthode utilitaire pour convertir Entité -> DTO
+        private ContentResponse toContentResponse(Content content) {
+            ContentResponse response = new ContentResponse();
+            response.setId(content.getId());
+            response.setTitle(content.getTitle());
+            response.setDescription(content.getDescription());
+            response.setReleaseDate(content.getReleaseDate());
+            response.setDurationMinutes(content.getDurationMinutes());
+            response.setPosterUrl(content.getPosterUrl());
+            response.setTrailerUrl(content.getTrailerUrl());
+            response.setType(content.getType());
+            response.setStatus(content.getStatus());
+            response.setRating(content.getRating());
+            response.setMinSubscriptionLevel(content.getMinSubscriptionLevel());
+            // Mapper les genres
+            if (content.getGenres() != null) {
+                response.setGenres(content.getGenres().stream()
+                    .map(genre -> new GenreResponse(genre.getId(), genre.getName()))
+                    .collect(Collectors.toSet()));
+            }
+            response.setCreatedAt(content.getCreatedAt());
+            response.setUpdatedAt(content.getUpdatedAt());
+            return response;
+        }
+
+        // Méthode utilitaire pour convertir DTO -> Entité (pour la création)
+        private Content toContentEntity(ContentRequest request) {
+            Content content = new Content();
+            content.setTitle(request.getTitle());
+            content.setDescription(request.getDescription());
+            content.setReleaseDate(request.getReleaseDate());
+            content.setDurationMinutes(request.getDurationMinutes());
+            content.setPosterUrl(request.getPosterUrl());
+            content.setTrailerUrl(request.getTrailerUrl());
+            content.setType(request.getType());
+            content.setRating(request.getRating());
+            content.setMinSubscriptionLevel(request.getMinSubscriptionLevel());
+            // Note: Le statut sera défini par le service ou par défaut
+            return content;
+        }
+
+        @PostMapping
+        public ResponseEntity<ContentResponse> createContent(@Valid @RequestBody ContentRequest request) {
+            Content content = toContentEntity(request);
+            // Associer les genres
+            if (request.getGenreIds() != null && !request.getGenreIds().isEmpty()) {
+                Set<Genre> genres = request.getGenreIds().stream()
+                    .map(genreService::getGenreById) // Supposons une méthode pour récupérer un genre par ID
+                    .collect(Collectors.toSet());
+                content.setGenres(genres);
+            }
+            Content createdContent = contentService.createContent(content);
+            return new ResponseEntity<>(toContentResponse(createdContent), HttpStatus.CREATED);
+        }
+
+        @GetMapping("/{id}")
+        public ResponseEntity<ContentResponse> getContentById(@PathVariable Long id) {
+            Content content = contentService.getContentById(id);
+            return ResponseEntity.ok(toContentResponse(content));
+        }
+
+        @GetMapping("/published")
+        public ResponseEntity<List<ContentResponse>> getAllPublishedContent() {
+            List<Content> contents = contentService.getAllPublishedContent();
+            List<ContentResponse> responses = contents.stream()
+                    .map(this::toContentResponse)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(responses);
+        }
+
+        @PutMapping("/{id}")
+        public ResponseEntity<ContentResponse> updateContent(@PathVariable Long id, @Valid @RequestBody ContentRequest request) {
+            Content updatedContent = toContentEntity(request);
+             if (request.getGenreIds() != null && !request.getGenreIds().isEmpty()) {
+                Set<Genre> genres = request.getGenreIds().stream()
+                    .map(genreService::getGenreById)
+                    .collect(Collectors.toSet());
+                updatedContent.setGenres(genres);
+            }
+            Content content = contentService.updateContent(id, updatedContent);
+            return ResponseEntity.ok(toContentResponse(content));
+        }
+
+        @DeleteMapping("/{id}")
+        public ResponseEntity<Void> deleteContent(@PathVariable Long id) {
+            contentService.deleteContent(id);
+            return ResponseEntity.noContent().build();
+        }
+
+        @PutMapping("/{id}/publish")
+        public ResponseEntity<ContentResponse> publishContent(@PathVariable Long id) {
+            Content publishedContent = contentService.publishContent(id);
+            return ResponseEntity.ok(toContentResponse(publishedContent));
+        }
+
+        // Ajoutez des endpoints pour les séries/épisodes, recherche, filtrage, etc.
+    }
+    ```
+
+---
+
+### **Étape 6 : Gestion des Exceptions Globales**
+
+Implémentez un `@ControllerAdvice` pour gérer les exceptions de manière cohérente et retourner des messages d'erreur clairs.
+
+```java
+package com.videoflix.content.exceptions;
+
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+@ControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleEntityNotFoundException(EntityNotFoundException ex) {
+        ErrorResponse error = new ErrorResponse(HttpStatus.NOT_FOUND.value(), ex.getMessage(), LocalDateTime.now());
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+                errors.put(error.getField(), error.getDefaultMessage()));
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
+        ErrorResponse error = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Une erreur inattendue est survenue: " + ex.getMessage(), LocalDateTime.now());
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    // DTO pour les réponses d'erreur
+    @Data
+    @AllArgsConstructor
+    class ErrorResponse {
+        private int status;
+        private String message;
+        private LocalDateTime timestamp;
+    }
+}
+```
+
+---
+
+### **Étape 7 : Configuration de la Base de Données**
+
+Configurez `application.yml` ou `application.properties` pour votre base de données.
+
+```yaml
+# application.yml
+spring:
+  application:
+    name: content-microservice
+  datasource:
+    url: jdbc:h2:mem:contentdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE # H2 pour le dev/tests
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update # Ou validate, none en production. 'create-drop' pour les tests.
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  # Configuration pour RabbitMQ si le service publie des événements
+  #rabbitmq:
+  #  host: localhost
+  #  port: 5672
+  #  username: guest
+  #  password: guest
+  #  listener:
+  #    simple:
+  #      auto-startup: true
+
+server:
+  port: 8081 # Port pour le microservice content (assurez-vous qu'il ne chevauche pas les autres)
+
+logging:
+  level:
+    com.videoflix.content: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE # Pour voir les paramètres SQL
+```
+
+---
+
+### **Étape 8 : Tests Unitaires et d'Intégration**
+
+* **Tests Unitaires :** Pour les services, vérifiez que la logique métier est correcte en mockant les repositories.
+* **Tests d'Intégration :** Pour les contrôleurs, utilisez `@SpringBootTest` avec `MockMvc` pour tester les endpoints HTTP sans démarrer un serveur complet. Testez les interactions avec la base de données réelle.
+
+---
+
+### **Étape 9 : Configuration des Événements (si nécessaire)**
+
+Si le service `content` doit publier des événements (ex: un film est publié), configurez `Spring AMQP` et créez les classes d'événement.
+
+```java
+// Exemple d'un événement ContentPublishedEvent
+package com.videoflix.content.events;
+
+import com.videoflix.content.entities.Content;
+import lombok.Getter;
+import org.springframework.context.ApplicationEvent;
+
+@Getter
+public class ContentPublishedEvent extends ApplicationEvent {
+    private final Long contentId;
+    private final String title;
+    private final String contentType; // MOVIE, SERIES etc.
+
+    public ContentPublishedEvent(Object source, Content content) {
+        super(source);
+        this.contentId = content.getId();
+        this.title = content.getTitle();
+        this.contentType = content.getType().name();
+    }
+}
+```
+
+Et un service qui publie cet événement :
+
+```java
+// Dans ContentService.java
+import org.springframework.context.ApplicationEventPublisher;
+// ...
+private final ApplicationEventPublisher eventPublisher;
+
+public ContentService(ContentRepository contentRepository, ApplicationEventPublisher eventPublisher) {
+    this.contentRepository = contentRepository;
+    this.eventPublisher = eventPublisher;
+}
+
+@Transactional
+public Content publishContent(Long id) {
+    Content content = getContentById(id);
+    content.setStatus(ContentStatus.PUBLISHED);
+    Content savedContent = contentRepository.save(content);
+    eventPublisher.publishEvent(new ContentPublishedEvent(this, savedContent)); // Publie l'événement
+    return savedContent;
+}
+```
+
+---
+
+### **Étape 10 : Dockerisation (pour le déploiement)**
+
+Créez un `Dockerfile` pour empaqueter votre microservice.
+
+```dockerfile
+# Utilise une image OpenJDK pour l'exécution
+FROM openjdk:17-jdk-slim as builder
+
+# Définit le répertoire de travail dans le conteneur
+WORKDIR /app
+
+# Copie le fichier pom.xml et télécharge les dépendances
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# Copie le reste du code source
+COPY src ./src
+
+# Construit l'application
+RUN mvn clean install -DskipTests
+
+# Image finale pour l'exécution
+FROM openjdk:17-jdk-slim
+
+# Définit le répertoire de travail
+WORKDIR /app
+
+# Copie le jar construit depuis l'étape 'builder'
+COPY --from=builder /app/target/*.jar app.jar
+
+# Expose le port sur lequel l'application s'exécutera
+EXPOSE 8081
+
+# Commande pour lancer l'application Spring Boot
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
+
+---
+
+### **Considérations Clés :**
+
+* **API Gateway :** Comment les autres microservices ou les applications frontend vont-ils accéder à ce service ? Vous aurez probablement une API Gateway (comme Spring Cloud Gateway ou Zuul) qui routera les requêtes.
+* **Service Discovery :** Votre service s'enregistrera-t-il auprès d'un service de découverte (Eureka, Consul, Kubernetes) ?
+* **Versionnement API :** Pensez à la version de votre API (ex: `/api/v1/content`).
+* **Sécurité :** Qui peut créer/modifier/supprimer du contenu ? Les endpoints d'administration devront être sécurisés (par exemple, seuls les administrateurs peuvent appeler `/content`). Les endpoints de lecture (comme `GET /content/published`) peuvent être publics ou nécessiter une authentification de base.
+* **Chargement des Média :** Ce service gère les *métadonnées* et les *URLs* des média. Les fichiers vidéo eux-mêmes sont généralement stockés dans un service de stockage objet (AWS S3, Google Cloud Storage) et servis via un CDN.
+
+En suivant ces étapes, vous aurez une base solide pour votre microservice `content` !
