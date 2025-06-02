@@ -13,8 +13,8 @@ import java.util.Set;
 @Entity
 @Table(name = "contents")
 @Data
-@NoArgsConstructor // Lombok: génère un constructeur sans arguments
-@AllArgsConstructor // Lombok: génère un constructeur avec tous les arguments
+@NoArgsConstructor
+@AllArgsConstructor
 public class Content {
 
     @Id
@@ -24,7 +24,7 @@ public class Content {
     @Column(nullable = false)
     private String title;
 
-    @Column(columnDefinition = "TEXT") // Pour un texte plus long
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     private LocalDate releaseDate;
@@ -50,14 +50,10 @@ public class Content {
     private SubscriptionLevelRequired minSubscriptionLevel; // BASIC, STANDARD, PREMIUM
 
     @ManyToMany
-    @JoinTable(
-        name = "content_genres",
-        joinColumns = @JoinColumn(name = "content_id"),
-        inverseJoinColumns = @JoinColumn(name = "genre_id")
-    )
-    private Set<Genre> genres = new HashSet<>();
+    @JoinTable(name = "content_categories", joinColumns = @JoinColumn(name = "content_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
+    private Set<Category> categories = new HashSet<>();
 
-    // Vous ajouteriez des relations pour les acteurs, réalisateurs ici aussi
+    // Ajouter des relations pour les acteurs, réalisateurs
 
     @Column(updatable = false)
     private LocalDateTime createdAt;
