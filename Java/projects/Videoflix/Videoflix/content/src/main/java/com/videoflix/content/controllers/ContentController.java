@@ -77,7 +77,7 @@ public class ContentController {
             Set<Category> categories = request.getCategoryId().stream()
                 .map(categoryService::getCategoryById)
                 .collect(Collectors.toSet());
-            content.setCategories(categories); // Changement ici : setGenres() devient setCategories()
+            content.setCategories(categories);
         }
         Content createdContent = contentService.createContent(content);
         return new ResponseEntity<>(toContentResponse(createdContent), HttpStatus.CREATED);

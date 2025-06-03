@@ -42,9 +42,9 @@ public class ContentService {
     @Transactional
     public Content updateContent(Long id, Content updatedContent) {
         Content existingContent = getContentById(id); // Récupère l'existant ou lance une exception
-        // Mettez à jour les propriétés de existingContent avec celles de updatedContent
+        // Mettre à jour les propriétés de existingContent avec celles de updatedContent
         existingContent.setTitle(updatedContent.getTitle());
-        existingContent.setDescription(updatedContent.setDescription());
+        existingContent.setDescription(updatedContent.getDescription());
         existingContent.setReleaseDate(updatedContent.getReleaseDate());
         existingContent.setDurationMinutes(updatedContent.getDurationMinutes());
         existingContent.setPosterUrl(updatedContent.getPosterUrl());
@@ -52,7 +52,7 @@ public class ContentService {
         existingContent.setType(updatedContent.getType());
         existingContent.setRating(updatedContent.getRating());
         existingContent.setMinSubscriptionLevel(updatedContent.getMinSubscriptionLevel());
-        // Gérez la mise à jour des genres, acteurs, etc. ici
+        // Gestion de la mise à jour des genres, acteurs, etc. ici
         return contentRepository.save(existingContent);
     }
 
@@ -66,7 +66,7 @@ public class ContentService {
         Content content = getContentById(id);
         content.setStatus(ContentStatus.PUBLISHED);
         return contentRepository.save(content);
-        // Vous pourriez déclencher un événement ici: ContentPublishedEvent
+        // Déclencher un événement ici: ContentPublishedEvent
     }
 
     // Ajouter des méthodes pour les séries/épisodes si vous les gérez
