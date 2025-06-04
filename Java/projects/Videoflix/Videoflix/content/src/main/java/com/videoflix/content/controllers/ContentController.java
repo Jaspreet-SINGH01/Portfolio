@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class ContentController {
 
     private final ContentService contentService;
-    private final CategoryService categoryService; // Injecter le service pour les catégories
+    private final CategoryService categoryService;
 
     public ContentController(ContentService contentService, CategoryService categoryService) {
         this.contentService = contentService;
@@ -43,10 +43,10 @@ public class ContentController {
         response.setRating(content.getRating());
         response.setMinSubscriptionLevel(content.getMinSubscriptionLevel());
         // Mapper les catégories
-        if (content.getCategories() != null) { // Changement ici : getGenres() devient getCategories()
-            response.setCategoryResponses(content.getCategories().stream() // Changement ici : setGenres() devient setCategories()
-                .map(category -> new CategoryResponse(category.getId(), category.getName())) // Changement ici : GenreResponse devient CategoryResponse
-                .collect(Collectors.toSet()));
+        if (content.getCategories() != null) {
+            response.setCategoryResponses(content.getCategories().stream()
+                    .map(category -> new CategoryResponse(category.getId(), category.getName()))
+                    .collect(Collectors.toSet()));
         }
         response.setCreatedAt(content.getCreatedAt());
         response.setUpdatedAt(content.getUpdatedAt());
@@ -75,11 +75,11 @@ public class ContentController {
         // Associer les catégories
         if (request.getCategoryId() != null && !request.getCategoryId().isEmpty()) {
             Set<Category> categories = request.getCategoryId().stream()
-                .map(categoryService::getCategoryById)
-                .collect(Collectors.toSet());
+                    .map(categoryService::getCategoryById)
+                    .collect(Collectors.toSet());
             content.setCategories(categories);
         }
-        Content createdContent = contentService.createContent(content);
+        Content createdContent = contentService.createContent(content, null, null, null, null, null);
         return new ResponseEntity<>(toContentResponse(createdContent), HttpStatus.CREATED);
     }
 
@@ -99,15 +99,16 @@ public class ContentController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ContentResponse> updateContent(@PathVariable Long id, @Valid @RequestBody ContentRequest request) {
+    public ResponseEntity<ContentResponse> updateContent(@PathVariable Long id,
+            @Valid @RequestBody ContentRequest request) {
         Content updatedContent = toContentEntity(request);
         if (request.getCategoryId() != null && !request.getCategoryId().isEmpty()) {
             Set<Category> categories = request.getCategoryId().stream()
-                .map(categoryService::getCategoryById)
-                .collect(Collectors.toSet());
-            updatedContent.setCategories(categories); // Changement ici : setGenres() devient setCategories()
+                    .map(categoryService::getCategoryById)
+                    .collect(Collectors.toSet());
+            updatedContent.setCategories(categories);
         }
-        Content content = contentService.updateContent(id, updatedContent);
+        Content content = contentService.updateContent(id, updatedContent, null, null, null, null, null);
         return ResponseEntity.ok(toContentResponse(content));
     }
 

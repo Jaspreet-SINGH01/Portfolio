@@ -27,6 +27,6 @@ public class ContentRequest {
     private ContentType type;
     private Rating rating;
     private SubscriptionLevelRequired minSubscriptionLevel;
-    private Set<Long> genreIds; // Pour associer des genres existants
+    private Set<Long> categoryId; // Pour associer des genres existants
     // Ajouter les IDs d'acteurs/réalisateurs
 }
